@@ -1,4 +1,4 @@
-# BModbus
+# Bill's Modbus
 
 This is a straightforward modbus RTU implementation in C designed for embedded systems.
 
@@ -28,8 +28,8 @@ Future stuff:
 
 # Usage
 There are three main ways to use this library, and they all share some common elements.
-1. Runs in interrupts (requires direct interrupt callbacks).
-2. Runs in the main loop (requires least integration).
+1. Runs in interrupts (requires callbacks and serial writing routine).
+2. Runs only in the main loop.
 3. In both interrupts and the main loop.
 
 //Describe limitations of each here
@@ -54,11 +54,11 @@ This will call the callback methods directly from the interrupt -- allowing your
 //#define BMB1_UART_INTERRUPT_HANDLER HAL_UART_IRQHandler
 #define BMB1_REGISTERS_WRITE        modbus_registers_write
 #define BMB1_REGISTERS_READ         modbus_regsiters_read
+#define BMB1_SERIAL_WRITE           uart_transmit
 #define BMB1_BAUD                   19200
 ```
 
 ```c
-//arduino sketch
 #include "bmb_config.h"
 #include "bmodbus.h"
 
@@ -100,6 +100,7 @@ void main(){
     bmb1_init(); //Initializes the modbus library
     while(1){
         //Never have to call any modbus stuff here!
+        //Modbus callbacks occur inside of interrupt handlers
     }
 }
 ```
@@ -113,3 +114,8 @@ The idea is my customers (and anyone else) can use this library and not have to 
 They can focus on their application and not the modbus implementation.
 
 I've made unit tests to cover the functionality.
+
+# Test plan
+Unsure how best to automate these tests, but I'm hoping to rely heavily on testing via github actions.
+
+To test unit tests in a big endian environment, I can use https://github.com/uraimo/run-on-arch-action to run an s390x linux image.
