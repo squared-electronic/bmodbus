@@ -4,45 +4,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "bmodbus.h"
-typedef enum{
-    CLIENT_STATE_IDLE=0, CLIENT_STATE_WAITING_FOR_NEXT_MESSAGE, CLIENT_STATE_FUNCTION_CODE, CLIENT_STATE_HEADER, CLIENT_STATE_HEADER_CHECK, CLIENT_STATE_DATA, CLIENT_STATE_FOOTER, CLIENT_STATE_PROCESSING_REQUEST, CLIENT_STATE_SENDING_RESPONSE
-}modbus_client_state_t;
-
-typedef union{
-    uint16_t word[2];
-    uint8_t byte[4];
-}header_t;
-typedef union{
-    uint16_t half;
-    uint8_t byte[2];
-}uint16_bytes;
-
-typedef struct{
-    modbus_client_state_t state;
-    uint32_t last_microseconds;
-    uint32_t interframe_delay;
-    uint16_t client_address; //historically called slave address
-    //These are active function variables used in headers
-    header_t header;
-    uint16_bytes crc;
-    uint8_t function;
-#ifdef BMB_CLIENT_ASCII
-    uint8_t ascii; //Used for modbus ascii
-#endif //BMB_CLIENT_ASCII
-    uint16_t byte_count; //Used for keeping track of message length
-#ifdef BMB_CLIENT_READ_WRITE_FUNCTION //These are only needed if we implement the read-write function
-    uint16_t address2;
-    uint8_t size2;
-#endif //BMB_CLIENT_READ_WRITE_FUNCTION
-    uint8_t index;
-    //Payload is outside of this struct so it can be configured differently for each instance
-    uint16_t data[BMB_MAXIMUM_MESSAGE_SIZE];
-}modbus_client_t;
-
-//This is used to calculate the interbyte delay (if used). It should be 3.5 times the time it takes to send a byte or 1.75ms when > 19200bps
-//This calculation should be performed at compile time
-#define INTERFRAME_DELAY_MICROSECONDS(BAUDRATE) ((19200 < BAUDRATE) ? 1750 : (35000000 / BAUDRATE))
-
+#include "bmodbus_internals.h"
 /* Headers of requests:
  * 1 read coils = 2 byte starting address, 2 byte quantity of coils
  * 2 read discrete inputs = 2 byte starting address, 2 byte quantity of inputs
@@ -57,9 +19,12 @@ typedef struct{
 
 static void bmodbus_init(modbus_client_t *bmodbus, uint32_t interframe_delay){
     printf("bmodbus_init\n");
+    bmodbus->state = CLIENT_STATE_IDLE;
+    bmodbus->interframe_delay = interframe_delay;
 }
 static void bmodbus_deinit(modbus_client_t *bmodbus){
     printf("bmodbus_deinit\n");
+    bmodbus->state = CLIENT_NO_INIT;
 }
 
 static void process_request(modbus_client_t *bmodbus){
@@ -152,8 +117,6 @@ static void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microsec
                     bmodbus->state = CLIENT_STATE_WAITING_FOR_NEXT_MESSAGE;
                 }
             }
-
-
     }
     bmodbus->byte_count++;
     if((bmodbus->state == CLIENT_STATE_FUNCTION_CODE) || (bmodbus->state == CLIENT_STATE_HEADER) || (bmodbus->state == CLIENT_STATE_HEADER_CHECK) || (bmodbus->state == CLIENT_STATE_DATA)){
@@ -165,7 +128,6 @@ static void bmodbus_client_loop(modbus_client_t *bmodbus, uint32_t microsecond){
     printf("bmodbus_client_loop\n");
 }
 
-#ifdef BMB1_CLIENT
 static modbus_client_t modbus1;
 void modbus1_init(void){
     bmodbus_init(&modbus1, INTERFRAME_DELAY_MICROSECONDS(BMB1_BAUDRATE));
@@ -176,5 +138,7 @@ void modbus1_next_byte(uint32_t microseconds, uint8_t byte){
 void modbus1_single_loop(uint32_t microseconds){
     bmodbus_client_loop(&modbus1, microseconds);
 }
-#endif
 
+#ifdef UNIT_TESTING
+modbus_client_t * modbus1_testing = &modbus1;
+#endif
