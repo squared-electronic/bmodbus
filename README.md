@@ -107,7 +107,6 @@ void main(){
 
 
 # Story
-
 Bill 3/18/2025 - I've had to implement modbus from scratch for more than twenty projects over the years. Essentially none of them can be open-sourced, so I built the last modbus library I will ever write.
 
 The idea is my customers (and anyone else) can use this library and not have to worry about modbus.

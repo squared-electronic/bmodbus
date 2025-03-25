@@ -5,7 +5,7 @@
 #ifndef BMODBUS_BMODBUS_INTERNALS_H
 #define BMODBUS_BMODBUS_INTERNALS_H
 typedef enum{
-    CLIENT_NO_INIT=0, CLIENT_STATE_IDLE, CLIENT_STATE_WAITING_FOR_NEXT_MESSAGE, CLIENT_STATE_FUNCTION_CODE, CLIENT_STATE_HEADER, CLIENT_STATE_HEADER_CHECK, CLIENT_STATE_DATA, CLIENT_STATE_FOOTER, CLIENT_STATE_PROCESSING_REQUEST, CLIENT_STATE_SENDING_RESPONSE
+    CLIENT_NO_INIT=0, CLIENT_STATE_IDLE, CLIENT_STATE_WAITING_FOR_NEXT_MESSAGE, CLIENT_STATE_FUNCTION_CODE, CLIENT_STATE_HEADER, CLIENT_STATE_HEADER_CHECK, CLIENT_STATE_DATA, CLIENT_STATE_FOOTER, CLIENT_STATE_FOOTER2, CLIENT_STATE_PROCESSING_REQUEST, CLIENT_STATE_SENDING_RESPONSE
 }modbus_client_state_t;
 
 typedef union{
@@ -21,7 +21,7 @@ typedef struct{
     modbus_client_state_t state;
     uint32_t last_microseconds;
     uint32_t interframe_delay;
-    uint16_t client_address; //historically called slave address
+    uint8_t client_address; //historically called slave address
     //These are active function variables used in headers
     header_t header;
     uint16_bytes crc;
@@ -36,7 +36,8 @@ typedef struct{
 #endif //BMB_CLIENT_READ_WRITE_FUNCTION
     uint8_t index;
     //Payload is outside of this struct so it can be configured differently for each instance
-    uint16_t data[BMB_MAXIMUM_MESSAGE_SIZE];
+    //uint16_t data[BMB_MAXIMUM_MESSAGE_SIZE];
+    modbus_request_t request;
 }modbus_client_t;
 
 //This is used to calculate the interbyte delay (if used). It should be 3.5 times the time it takes to send a byte or 1.75ms when > 19200bps

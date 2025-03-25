@@ -15,9 +15,21 @@
 #ifndef BMB1_BAUDRATE
 #define BMB1_BAUDRATE 38400
 #endif
-extern void modbus1_init(void);
+
+typedef struct {
+    uint8_t function;
+    uint8_t size_write;
+    int8_t result;
+    uint8_t size_read;
+    uint16_t data[BMB_MAXIMUM_MESSAGE_SIZE];
+}modbus_request_t;
+
+extern void modbus1_init(uint8_t client_address);
 extern void modbus1_next_byte(uint32_t microseconds, uint8_t byte);
 extern void modbus1_single_loop(uint32_t microseconds);
+extern modbus_request_t * modbus1_get_request(void);
+extern void modbus1_finish_request(void);
+extern void modbus1_finish_send(void);
 
 
 #endif //BMODBUS_BMODBUS_H

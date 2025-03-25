@@ -16,12 +16,21 @@
  * 16 write multiple registers = 2 byte starting address, 2 byte quantity of registers, 1 byte byte count, N bytes of data (header is only 4 bytes)
  */
 
+#ifndef MODBUS_HTONS
+#define MODBUS_HTONS(x) ((((x) & 0xFF) << 8) | (((x) & 0xFF00) >> 8))
+#endif
+#ifndef MODBUS_MEMMOVE
+#define MODBUS_MEMMOVE(DST, SRC, N) {for(int16_t memmove_i=(N)-1; memmove_i>-1; i--) ((uint8_t*)(DST))[memmove_i] = ((uint8_t*)(SRC))[memmove_i];}
+#endif
 
-static void bmodbus_init(modbus_client_t *bmodbus, uint32_t interframe_delay){
+static void bmodbus_init(modbus_client_t *bmodbus, uint32_t interframe_delay, uint8_t client_address){
     printf("bmodbus_init\n");
     bmodbus->state = CLIENT_STATE_IDLE;
     bmodbus->interframe_delay = interframe_delay;
+    bmodbus->client_address = client_address;
+    bmodbus->crc.half = 0xFFFF;
 }
+
 static void bmodbus_deinit(modbus_client_t *bmodbus){
     printf("bmodbus_deinit\n");
     bmodbus->state = CLIENT_NO_INIT;
@@ -33,7 +42,7 @@ static void process_request(modbus_client_t *bmodbus){
 
 static uint16_t crc_update(uint16_t crc, uint8_t byte) {
     uint16_t poly = 0xA001;
-    crc ^= byte;
+    crc = (uint16_t)(crc ^ byte);
     for (uint8_t i = 0; i < 8; i++) {
         if (crc & 1) {
             crc = (crc >> 1) ^ poly;
@@ -67,8 +76,11 @@ static void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microsec
             bmodbus->state = CLIENT_STATE_HEADER;
             break;
         case CLIENT_STATE_HEADER:
-            bmodbus->header.byte[bmodbus->byte_count-3] = byte;
+            bmodbus->header.byte[bmodbus->byte_count-2] = byte;
             if(bmodbus->byte_count == 5){
+                //Endianness conversion
+                bmodbus->header.word[0] = MODBUS_HTONS(bmodbus->header.word[0]);
+                bmodbus->header.word[1] = MODBUS_HTONS(bmodbus->header.word[1]);
                 if((bmodbus->function == 15) || (bmodbus->function == 16)){ //These are the only functions that have a byte count
                     bmodbus->state = CLIENT_STATE_HEADER_CHECK;
                 }else{
@@ -77,7 +89,7 @@ static void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microsec
             }
             break;
         case CLIENT_STATE_HEADER_CHECK:
-            if(byte == (bmodbus->header.word[1])) {
+            if(byte == 2*(bmodbus->header.word[1])) { //It contains a byte count and we compare it with 2x the number of 16bit registers
                 if(byte > BMB_MAXIMUM_MESSAGE_SIZE){
                     //FIXME we should add optional tracking of errors for debug purposes
                     bmodbus->state = CLIENT_STATE_WAITING_FOR_NEXT_MESSAGE;
@@ -91,8 +103,12 @@ static void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microsec
             }
             break;
         case CLIENT_STATE_DATA:
-            bmodbus->data[bmodbus->index++] = byte;
-            if(bmodbus->index == bmodbus->header.word[1]){
+            ((uint8_t*)bmodbus->request.data)[bmodbus->index] = byte;
+            if(bmodbus->index & 1){ //Endianness conversion every completed word
+                bmodbus->request.data[bmodbus->index/2] = MODBUS_HTONS(bmodbus->request.data[bmodbus->index/2]);
+            }
+            bmodbus->index++;
+            if(bmodbus->index == 2 * bmodbus->header.word[1]){
                 //Here we can process the request
                 bmodbus->state = CLIENT_STATE_FOOTER;
                 bmodbus->index = 0;
@@ -100,26 +116,27 @@ static void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microsec
             break;
         case CLIENT_STATE_FOOTER:
             //Here we verify the CRC
-            if(bmodbus->index == 0){
-                if(bmodbus->crc.byte[1] == byte){
-                    bmodbus->index++;
-                }else{
-                    //FIXME bad CRC
-                    bmodbus->state = CLIENT_STATE_WAITING_FOR_NEXT_MESSAGE;
-                }
+            if(bmodbus->crc.byte[0] == byte){
+                bmodbus->state = CLIENT_STATE_FOOTER2;
             }else{
-                if(bmodbus->crc.byte[0] == byte){
-                    //GOOD CRC!!!
-                    process_request(bmodbus);
-                    bmodbus->state = CLIENT_STATE_WAITING_FOR_NEXT_MESSAGE;
-                }else{
-                    //FIXME bad CRC
-                    bmodbus->state = CLIENT_STATE_WAITING_FOR_NEXT_MESSAGE;
-                }
+                //FIXME bad CRC
+                bmodbus->state = CLIENT_STATE_WAITING_FOR_NEXT_MESSAGE;
             }
+            break;
+        case CLIENT_STATE_FOOTER2:
+            if(bmodbus->crc.byte[1] == byte){
+                //GOOD CRC!!!
+                //FIXME --  either process the request OR just wait for a polling entry (pending request)
+                bmodbus->state = CLIENT_STATE_PROCESSING_REQUEST;
+                process_request(bmodbus);
+            }else{
+                //FIXME bad CRC
+                bmodbus->state = CLIENT_STATE_WAITING_FOR_NEXT_MESSAGE;
+            }
+            break;
     }
     bmodbus->byte_count++;
-    if((bmodbus->state == CLIENT_STATE_FUNCTION_CODE) || (bmodbus->state == CLIENT_STATE_HEADER) || (bmodbus->state == CLIENT_STATE_HEADER_CHECK) || (bmodbus->state == CLIENT_STATE_DATA)){
+    if((bmodbus->state == CLIENT_STATE_FUNCTION_CODE) || (bmodbus->state == CLIENT_STATE_HEADER) || (bmodbus->state == CLIENT_STATE_HEADER_CHECK) || (bmodbus->state == CLIENT_STATE_DATA) || (bmodbus->state == CLIENT_STATE_FOOTER)){
         bmodbus->crc.half = crc_update(bmodbus->crc.half, byte);
     }
 }
@@ -129,8 +146,8 @@ static void bmodbus_client_loop(modbus_client_t *bmodbus, uint32_t microsecond){
 }
 
 static modbus_client_t modbus1;
-void modbus1_init(void){
-    bmodbus_init(&modbus1, INTERFRAME_DELAY_MICROSECONDS(BMB1_BAUDRATE));
+void modbus1_init(uint8_t client_address){
+    bmodbus_init(&modbus1, INTERFRAME_DELAY_MICROSECONDS(BMB1_BAUDRATE), client_address);
 }
 void modbus1_next_byte(uint32_t microseconds, uint8_t byte){
     bmodbus_client_next_byte(&modbus1, microseconds, byte);
