@@ -90,7 +90,7 @@ static void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microsec
             break;
         case CLIENT_STATE_HEADER_CHECK:
             if(byte == 2*(bmodbus->header.word[1])) { //It contains a byte count and we compare it with 2x the number of 16bit registers
-                if(byte > BMB_MAXIMUM_MESSAGE_SIZE){
+                if(byte > BMB_MAXIMUM_MESSAGE_SIZE/2){
                     //FIXME we should add optional tracking of errors for debug purposes
                     bmodbus->state = CLIENT_STATE_WAITING_FOR_NEXT_MESSAGE;
                 }else {
@@ -103,9 +103,9 @@ static void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microsec
             }
             break;
         case CLIENT_STATE_DATA:
-            ((uint8_t*)bmodbus->request.data)[bmodbus->index] = byte;
+            ((uint8_t*)bmodbus->payload.request.data)[bmodbus->index] = byte;
             if(bmodbus->index & 1){ //Endianness conversion every completed word
-                bmodbus->request.data[bmodbus->index/2] = MODBUS_HTONS(bmodbus->request.data[bmodbus->index/2]);
+                bmodbus->payload.request.data[bmodbus->index/2] = MODBUS_HTONS(bmodbus->payload.request.data[bmodbus->index/2]);
             }
             bmodbus->index++;
             if(bmodbus->index == 2 * bmodbus->header.word[1]){
