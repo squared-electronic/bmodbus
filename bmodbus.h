@@ -2,6 +2,14 @@
 // Created by billm on 3/18/2025.
 //
 
+/**
+ * @file bmodbus.h
+ * @author Bill McCartney
+ * @date 18 Mar 2025
+ * @brief File containing definition of api.
+ *
+ */
+
 #ifndef BMODBUS_H
 #define BMODBUS_H
 #include "bmb_config.h"
@@ -29,27 +37,28 @@ typedef struct {
     uint8_t size;
 }modbus_uart_response_t;
 
-/*
- * @ brief: Initialize the modbus client
+/**
+ * @brief Initialize the modbus client
  *
- * @ param: client_address - the address of the client 1->254
- * @ return: none
- * @ note: This function must be called before any other modbus functions
+ * This initializes the modbus client. It must be called before any other modbus functions.
+ * @param client_address - the address of the client 1->254
+ * @return none
+ * @note This function must be called before any other modbus functions
  */
 extern void modbus1_init(uint8_t client_address);
-/*
- * @ brief: send the next byte to the modbus client
+/**
+ * @brief send the next byte to the modbus client
  *
- * @ param: microseconds - the time the last byte was sent in microseconds
- * @ param: byte - the byte to send
+ * @param microseconds - the time the last byte was sent in microseconds
+ * @param byte - the byte to send
  *
- * @ return: none
+ * @return none
  *
  * @ note: This function should be called for each byte received from the modbus master. It can be called from an interrupt, or the bytes can be sent via a task.
  */
 extern void modbus1_next_byte(uint32_t microseconds, uint8_t byte);
 extern void modbus1_single_loop(uint32_t microseconds);
-/*
+/**
  * @ brief: Get the next modbus request if there's one pending
  *
  * @ return: a pointer to the request, or NULL if there's no request
