@@ -23,8 +23,8 @@ target_include_directories(unit_testing PRIVATE tests/unity)
 target_compile_definitions(unit_testing PRIVATE -DUNIT_TESTING)
 target_compile_options(unit_testing PRIVATE -Wall -Wextra -Wpedantic)
 
-#add_test(NAME unit_testing COMMAND unit_testing)
-#enable_testing()
+add_test(NAME unit_testing COMMAND unit_testing)
+enable_testing()
 # HEre we force the unit_testing target to be built
 #add_custom_target(run_tests COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure DEPENDS unit_testing)
 #add_dependencies(basic_client run_tests)
