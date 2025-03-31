@@ -235,6 +235,7 @@ void test_write_coils(void){
     }
 
     response = modbus1_get_response();
+    TEST_ASSERT_EQUAL(NULL, response); //Introducing a false failure to ensure CI is working.
 }
 
 int main(void) {
