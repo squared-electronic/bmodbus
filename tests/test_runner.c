@@ -3,12 +3,14 @@
 //
 #include "unity/unity.h"
 #include <stdint.h>
-extern void test_bmodbus_client_simple(void);
+extern void test_client_simple_write(void);
+extern void test_client_single_write(void);
 int main(void) {
     UNITY_BEGIN();
 
     // Run test cases
-    RUN_TEST(test_bmodbus_client_simple);
+    RUN_TEST(test_client_simple_write);
+    RUN_TEST(test_client_single_write);
 
     return UNITY_END();
 }
