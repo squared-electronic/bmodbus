@@ -17,7 +17,11 @@
  */
 
 #ifndef MODBUS_HTONS
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define MODBUS_HTONS(x) ((((x) & 0xFF) << 8) | (((x) & 0xFF00) >> 8))
+#else
+#define MODBUS_HTONS(x) (x)
+#endif
 #endif
 
 #ifndef MODBUS_MEMMOVE
@@ -101,22 +105,23 @@ static void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microsec
                 //Endianness conversion
                 bmodbus->header.word[0] = MODBUS_HTONS(bmodbus->header.word[0]);
                 bmodbus->header.word[1] = MODBUS_HTONS(bmodbus->header.word[1]);
-                if((bmodbus->function == 15) || (bmodbus->function == 16)){ //These are the only functions that have a byte count
+                if(bmodbus->function == 16) { //These are the only functions that have a byte count
                     bmodbus->state = CLIENT_STATE_HEADER_CHECK;
+                    bmodbus->byte_size = 2 * bmodbus->header.word[1]; //Bytes for number of registers
+                    //FIXME -- ensure byte_size cannot be more than 250
+                }else if(bmodbus->function == 15){
+                    bmodbus->state = CLIENT_STATE_HEADER_CHECK;
+                    bmodbus->byte_size = (bmodbus->header.word[1] + 7) / 8;//Bytes for target number of bits
+                    //FIXME -- ensure byte_size cannot be more than 250
                 }else{
                     bmodbus->state = CLIENT_STATE_FOOTER;
                 }
             }
             break;
         case CLIENT_STATE_HEADER_CHECK:
-            if(byte == 2*(bmodbus->header.word[1])) { //It contains a byte count and we compare it with 2x the number of 16bit registers
-                if(byte > BMB_MAXIMUM_MESSAGE_SIZE/2){
-                    //FIXME we should add optional tracking of errors for debug purposes
-                    bmodbus->state = CLIENT_STATE_WAITING_FOR_NEXT_MESSAGE;
-                }else {
-                    bmodbus->index = 0;
-                    bmodbus->state = CLIENT_STATE_DATA;
-                }
+            if(byte == bmodbus->byte_size) { //It contains a byte count and we compare it with 2x the number of 16bit registers
+                bmodbus->index = 0;
+                bmodbus->state = CLIENT_STATE_DATA;
             }else{
                 //FIXME we should add optional tracking of errors for debug purposes
                 bmodbus->state = CLIENT_STATE_WAITING_FOR_NEXT_MESSAGE;
@@ -128,7 +133,7 @@ static void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microsec
                 bmodbus->payload.request.data[bmodbus->index/2] = MODBUS_HTONS(bmodbus->payload.request.data[bmodbus->index/2]);
             }
             bmodbus->index++;
-            if(bmodbus->index == 2 * bmodbus->header.word[1]){
+            if(bmodbus->index == bmodbus->byte_size){
                 //Here we can process the request
                 bmodbus->state = CLIENT_STATE_FOOTER;
                 bmodbus->index = 0;
@@ -154,6 +159,7 @@ static void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microsec
                         bmodbus->payload.request.size = 1;
                         bmodbus->payload.request.data[0] = bmodbus->header.word[1];
                         break;
+                    case 15:
                     case 16:
                     case 3:
                     case 4:
@@ -244,6 +250,21 @@ static void bmodbus_encode_client_response(modbus_client_t *bmodbus){
             //FIXME above move could overflow buffer on a weird read request
             bmodbus->payload.response.size = 3 + temp1;
             bmodbus->payload.response.data[2] = temp1;
+            break;
+        case 15:
+            //If failed return no response
+            if(bmodbus->payload.request.result){
+                bmodbus->payload.response.size = 0;
+                break;
+            }
+            //Store values from the request for the response
+            temp1 = bmodbus->payload.request.size;
+            temp2 = bmodbus->payload.request.address;
+            bmodbus->payload.response.size = 6;
+            bmodbus->payload.response.data[2] = (temp2 & 0xFF00) >> 8;
+            bmodbus->payload.response.data[3] = temp2 & 0xFF;
+            bmodbus->payload.response.data[4] = (temp1 & 0xFF00) >> 8;
+            bmodbus->payload.response.data[5] = temp1 & 0xFF;
             break;
     }
     if(bmodbus->payload.response.size) {

@@ -35,6 +35,7 @@ typedef struct{
     uint8_t size2;
 #endif //BMB_CLIENT_READ_WRITE_FUNCTION
     uint8_t index;
+    uint8_t byte_size;
     //Payload is outside of this struct so it can be configured differently for each instance
     union{
         modbus_request_t request;
@@ -46,6 +47,9 @@ typedef struct{
 //This is used to calculate the interbyte delay (if used). It should be 3.5 times the time it takes to send a byte or 1.75ms when > 19200bps
 //This calculation should be performed at compile time
 #define INTERFRAME_DELAY_MICROSECONDS(BAUDRATE) ((19200 < BAUDRATE) ? 1750 : (35000000 / BAUDRATE))
+
+//FIXME -- this can be automatically determined based upon maximum message size
+#define MAXIMUM_NUMBER_OF_BITS (0x07d0)
 
 #ifdef UNIT_TESTING
 #ifdef BMB1_CLIENT
