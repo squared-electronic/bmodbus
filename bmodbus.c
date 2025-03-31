@@ -158,6 +158,7 @@ static void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microsec
                     case 3:
                     case 4:
                     case 2:
+                    case 1:
                         bmodbus->payload.request.size = bmodbus->header.word[1];
                         break;
                     default:
@@ -229,6 +230,7 @@ static void bmodbus_encode_client_response(modbus_client_t *bmodbus){
             bmodbus->payload.response.size = 3 + 2*temp1;
             bmodbus->payload.response.data[2] = 2*temp1;
             break;
+        case 1:
         case 2:
             //If failed return no response
             if(bmodbus->payload.request.result){

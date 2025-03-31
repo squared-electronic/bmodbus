@@ -26,7 +26,7 @@
 
 typedef struct {
     uint16_t data[BMB_MAXIMUM_MESSAGE_SIZE/2];
-    uint8_t size;
+    uint16_t size; //It can be a number of registers OR a number of bits
     uint8_t function;
     uint16_t address;
     int8_t result;
@@ -34,7 +34,7 @@ typedef struct {
 
 typedef struct {
     uint8_t data[BMB_MAXIMUM_MESSAGE_SIZE];
-    uint8_t size;
+    uint8_t size; //It is the number of bytes in the response
 }modbus_uart_response_t;
 
 /**
