@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="1">
+    <builddir>bmodbus-cppcheck-build-dir</builddir>
+    <platform>Native</platform>
+    <analyze-all-vs-configs>false</analyze-all-vs-configs>
+    <check-headers>true</check-headers>
+    <check-unused-templates>false</check-unused-templates>
+    <max-ctu-depth>2</max-ctu-depth>
+    <max-template-recursion>1</max-template-recursion>
+    <paths>
+        <dir name="tests/client"/>
+        <dir name="tests/unity"/>
+        <dir name="."/>
+    </paths>
+    <exclude>
+        <path name="cmake-build-debug/"/>
+        <path name="tests/unity/"/>
+    </exclude>
+</project>
