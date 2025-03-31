@@ -19,13 +19,25 @@
 #ifndef MODBUS_HTONS
 #define MODBUS_HTONS(x) ((((x) & 0xFF) << 8) | (((x) & 0xFF00) >> 8))
 #endif
+
 #ifndef MODBUS_MEMMOVE
-#define MODBUS_MEMMOVE(DST, SRC, N) {for(int16_t memmove_i=(N)-1; memmove_i>-1; i--) ((uint8_t*)(DST))[memmove_i] = ((uint8_t*)(SRC))[memmove_i];}
+static void modbus_memmove(void * dst, void * src, uint16_t count) {
+    if(dst < src) { //If dest is before source, we can copy forward
+        for(uint16_t i = 0; i<count; i++) {
+            ((uint8_t*)dst)[i] = ((uint8_t*)src)[i];
+        }
+        return;
+    }else {
+        for (int16_t i = (count) - 1; i >= 0; i--) {
+            ((uint8_t *) dst)[i] = ((uint8_t *) src)[i];
+        }
+    }
+}
+#define MODBUS_MEMMOVE modbus_memmove
 #endif
 #define MODBUS_UNUSED(x) (void)(x)
 
 static void bmodbus_init(modbus_client_t *bmodbus, uint32_t interframe_delay, uint8_t client_address){
-    printf("bmodbus_init\n");
     bmodbus->state = CLIENT_STATE_IDLE;
     bmodbus->interframe_delay = interframe_delay;
     bmodbus->client_address = client_address;
@@ -143,6 +155,8 @@ static void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microsec
                         bmodbus->payload.request.data[0] = bmodbus->header.word[1];
                         break;
                     case 16:
+                    case 3:
+                    case 4:
                         bmodbus->payload.request.size = bmodbus->header.word[1];
                         break;
                     default:
@@ -152,7 +166,6 @@ static void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microsec
                 bmodbus->state = CLIENT_STATE_PROCESSING_REQUEST;
                 if(process_request(bmodbus)){
                     //event processing was complete
-
                 }
             }else{
                 //FIXME bad CRC
@@ -195,6 +208,25 @@ static void bmodbus_encode_client_response(modbus_client_t *bmodbus){
             bmodbus->payload.response.data[3] = temp2 & 0xFF;
             bmodbus->payload.response.data[4] = (temp1 & 0xFF00) >> 8;
             bmodbus->payload.response.data[5] = temp1 & 0xFF;
+            break;
+        case 3:
+        case 4:
+            //If failed return no response
+            if(bmodbus->payload.request.result){
+                bmodbus->payload.response.size = 0;
+                break;
+            }
+            //Store values from the request for the response
+            temp1 = bmodbus->payload.request.size;
+            //Endian flip the results
+            for(i=0;i<temp1;i++){
+                bmodbus->payload.request.data[i] = MODBUS_HTONS(bmodbus->payload.request.data[i]);
+            }
+            //Move the payload data to the response at the offset
+            MODBUS_MEMMOVE(bmodbus->payload.response.data+3, bmodbus->payload.request.data, 2*temp1);
+            //FIXME above move could overflow buffer on a weird read request
+            bmodbus->payload.response.size = 3 + 2*temp1;
+            bmodbus->payload.response.data[2] = 2*temp1;
             break;
     }
     if(bmodbus->payload.response.size) {
