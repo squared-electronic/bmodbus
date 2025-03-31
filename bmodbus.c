@@ -134,9 +134,20 @@ static void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microsec
         case CLIENT_STATE_FOOTER2:
             if(bmodbus->crc.byte[1] == byte){
                 //FIXME --  either process the request OR just wait for a polling entry (pending request)
-                bmodbus->payload.request.size = bmodbus->header.word[1];
                 bmodbus->payload.request.function = bmodbus->function;
                 bmodbus->payload.request.address = bmodbus->header.word[0];
+                //Here we prep the request struct for higher layers
+                switch (bmodbus->function) {
+                    case 6:
+                        bmodbus->payload.request.size = 1;
+                        bmodbus->payload.request.data[0] = bmodbus->header.word[1];
+                        break;
+                    case 16:
+                        bmodbus->payload.request.size = bmodbus->header.word[1];
+                        break;
+                    default:
+                        break;
+                }
                 bmodbus->payload.request.result = 0;
                 bmodbus->state = CLIENT_STATE_PROCESSING_REQUEST;
                 if(process_request(bmodbus)){
