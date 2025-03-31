@@ -5,8 +5,8 @@
 #include <stdint.h>
 extern void test_client_simple_write(void);
 extern void test_client_single_write(void);
-extern void test_client_single_read(void);
-extern void test_client_multiple_read(void);
+extern void test_client_holding_read(void);
+extern void test_client_input_read(void);
 
 int main(void) {
     UNITY_BEGIN();
@@ -14,8 +14,8 @@ int main(void) {
     // Run test cases
     RUN_TEST(test_client_simple_write);
     RUN_TEST(test_client_single_write);
-    RUN_TEST(test_client_single_read);
-    RUN_TEST(test_client_multiple_read);
+    RUN_TEST(test_client_holding_read);
+    RUN_TEST(test_client_input_read);
 
     return UNITY_END();
 }
