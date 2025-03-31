@@ -49,7 +49,7 @@ static void bmodbus_deinit(modbus_client_t *bmodbus){
     bmodbus->state = CLIENT_NO_INIT;
 }
 
-static uint8_t process_request(modbus_client_t *bmodbus){
+static inline uint8_t process_request(modbus_client_t *bmodbus){
     //Returns true iff the request was processed successfully via events
     MODBUS_UNUSED(bmodbus);
 #ifdef MODBUS1_CALLBACK
@@ -157,6 +157,7 @@ static void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microsec
                     case 16:
                     case 3:
                     case 4:
+                    case 2:
                         bmodbus->payload.request.size = bmodbus->header.word[1];
                         break;
                     default:
@@ -227,6 +228,20 @@ static void bmodbus_encode_client_response(modbus_client_t *bmodbus){
             //FIXME above move could overflow buffer on a weird read request
             bmodbus->payload.response.size = 3 + 2*temp1;
             bmodbus->payload.response.data[2] = 2*temp1;
+            break;
+        case 2:
+            //If failed return no response
+            if(bmodbus->payload.request.result){
+                bmodbus->payload.response.size = 0;
+                break;
+            }
+            //Store values from the request for the response
+            temp1 = (bmodbus->payload.request.size + 7) / 8; //Number of bytes from number of bits
+            //Move the payload data (bytes) to the response at the offset
+            MODBUS_MEMMOVE(bmodbus->payload.response.data+3, bmodbus->payload.request.data, temp1);
+            //FIXME above move could overflow buffer on a weird read request
+            bmodbus->payload.response.size = 3 + temp1;
+            bmodbus->payload.response.data[2] = temp1;
             break;
     }
     if(bmodbus->payload.response.size) {

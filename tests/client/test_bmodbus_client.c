@@ -170,11 +170,10 @@ void test_read_input_status(void){
 
     response = modbus1_get_response();
     TEST_ASSERT_NOT_EQUAL_MESSAGE(NULL, response, "modbus response is not ready");
-    TEST_ASSERT_EQUAL((0x016 + 7)/3 + 5, response->size);
-    TEST_ASSERT_EQUAL(0xad, response->data[0]);
-    TEST_ASSERT_EQUAL(0xde, response->data[1]);
-    TEST_ASSERT_EQUAL(0xef, response->data[2]);
-    TEST_ASSERT_EQUAL(0xbe, response->data[3]);
+    TEST_ASSERT_EQUAL((0x016 + 7)/8 + 5, response->size);
+    TEST_ASSERT_EQUAL(0xad, response->data[3]);
+    TEST_ASSERT_EQUAL(0xde, response->data[4]);
+    TEST_ASSERT_EQUAL(0xef, response->data[5]);
 }
 
 int main(void) {
