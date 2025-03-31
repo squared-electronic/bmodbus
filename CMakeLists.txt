@@ -17,7 +17,7 @@ add_executable(basic_client bmodbus.c bmodbus.h examples/basic_client/basic_clie
 target_include_directories(basic_client PRIVATE examples/basic_client)
 
 
-add_executable(unit_testing tests/unity/unity.c tests/test_runner.c tests/client/test_bmodbus_client.c bmodbus.c)
+add_executable(unit_testing tests/unity/unity.c tests/client/test_bmodbus_client.c bmodbus.c)
 target_include_directories(unit_testing PRIVATE tests/client)
 target_include_directories(unit_testing PRIVATE tests/unity)
 target_compile_definitions(unit_testing PRIVATE -DUNIT_TESTING)

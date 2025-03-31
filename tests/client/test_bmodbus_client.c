@@ -142,5 +142,48 @@ void test_client_input_read(void){
     TEST_ASSERT_EQUAL(0xef, response->data[6]);
     TEST_ASSERT_EQUAL(0xd0, response->data[7]);
     TEST_ASSERT_EQUAL(0x0d, response->data[8]);
+}
 
+void test_read_input_status(void){
+    uint8_t reading_bits_address_0x00c4_at_slave_2[] = {0x02, 0x02, 0x00, 0xc4, 0x00, 0x16, 0xb8, 0x0a, };
+    modbus_request_t * request = NULL;
+    modbus_uart_response_t * response = NULL;
+    memset(modbus1_testing, 0, sizeof(modbus_client_t));
+    modbus1_init(2);
+    uint32_t fake_time = 0;
+    fake_time += byte_timing_microseconds(38400) * 1; // 1 byte
+    for(uint16_t i=0;i<sizeof(reading_bits_address_0x00c4_at_slave_2);i++) {
+        //Ensure we are not giving a response
+        TEST_ASSERT_EQUAL_MESSAGE(NULL, modbus1_get_request(), "modbus request is ready too early");
+        modbus1_next_byte(fake_time, reading_bits_address_0x00c4_at_slave_2[i]);
+        fake_time += byte_timing_microseconds(38400) * 1; // 1 byte
+    }
+    request = modbus1_get_request();
+    TEST_ASSERT_NOT_EQUAL_MESSAGE(NULL, request, "modbus request is ready too early");
+    TEST_ASSERT_EQUAL(CLIENT_STATE_PROCESSING_REQUEST, modbus1_testing->state);
+    TEST_ASSERT_EQUAL(0x02, request->function);
+    TEST_ASSERT_EQUAL(0x0c4, request->address);
+    TEST_ASSERT_EQUAL(0x016, request->size); //Number of bits!
+
+    request->data[0] = 0xdead;
+    request->data[1] = 0xbeef;
+
+    response = modbus1_get_response();
+    TEST_ASSERT_NOT_EQUAL_MESSAGE(NULL, response, "modbus response is not ready");
+    TEST_ASSERT_EQUAL((0x016 + 7)/3 + 5, response->size);
+    TEST_ASSERT_EQUAL(0xad, response->data[0]);
+    TEST_ASSERT_EQUAL(0xde, response->data[1]);
+    TEST_ASSERT_EQUAL(0xef, response->data[2]);
+    TEST_ASSERT_EQUAL(0xbe, response->data[3]);
+}
+
+int main(void) {
+    UNITY_BEGIN();
+    // Run test cases
+    RUN_TEST(test_client_simple_write, 10);
+    RUN_TEST(test_client_single_write);
+    RUN_TEST(test_client_holding_read);
+    RUN_TEST(test_client_input_read);
+    RUN_TEST(test_read_input_status);
+    return UNITY_END();
 }
