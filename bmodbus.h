@@ -66,8 +66,8 @@ extern void modbus1_single_loop(uint32_t microseconds);
  * @ note: This function is typically called from the main loop to return a request to the application. The application should call modbus_finish_request() when it's done with the request.
  */
 extern modbus_request_t * modbus1_get_request(void);
-extern void modbus1_finish_request(void);
-extern void modbus1_finish_send(void);
+extern modbus_uart_response_t * modbus1_get_response(void);
+extern void modbus1_response_send_complete(void);
 
 
 #endif //BMODBUS_BMODBUS_H

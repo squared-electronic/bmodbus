@@ -22,6 +22,7 @@
 #ifndef MODBUS_MEMMOVE
 #define MODBUS_MEMMOVE(DST, SRC, N) {for(int16_t memmove_i=(N)-1; memmove_i>-1; i--) ((uint8_t*)(DST))[memmove_i] = ((uint8_t*)(SRC))[memmove_i];}
 #endif
+#define MODBUS_UNUSED(x) (void)(x)
 
 static void bmodbus_init(modbus_client_t *bmodbus, uint32_t interframe_delay, uint8_t client_address){
     printf("bmodbus_init\n");
@@ -36,8 +37,15 @@ static void bmodbus_deinit(modbus_client_t *bmodbus){
     bmodbus->state = CLIENT_NO_INIT;
 }
 
-static void process_request(modbus_client_t *bmodbus){
-
+static uint8_t process_request(modbus_client_t *bmodbus){
+    //Returns true iff the request was processed successfully via events
+    MODBUS_UNUSED(bmodbus);
+#ifdef MODBUS1_CALLBACK
+    if(bmodbus == &modbus1){
+        return MODBUS1_CALLBACK(bmodbus);
+    }
+#endif //MODBUS1_CALLBACK
+    return 0;
 }
 
 static uint16_t crc_update(uint16_t crc, uint8_t byte) {
@@ -125,14 +133,22 @@ static void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microsec
             break;
         case CLIENT_STATE_FOOTER2:
             if(bmodbus->crc.byte[1] == byte){
-                //GOOD CRC!!!
                 //FIXME --  either process the request OR just wait for a polling entry (pending request)
+                bmodbus->payload.request.size = bmodbus->header.word[1];
+                bmodbus->payload.request.function = bmodbus->function;
+                bmodbus->payload.request.address = bmodbus->header.word[0];
+                bmodbus->payload.request.result = 0;
                 bmodbus->state = CLIENT_STATE_PROCESSING_REQUEST;
-                process_request(bmodbus);
+                if(process_request(bmodbus)){
+                    //event processing was complete
+
+                }
             }else{
                 //FIXME bad CRC
                 bmodbus->state = CLIENT_STATE_WAITING_FOR_NEXT_MESSAGE;
             }
+            break;
+        default: //Ignore bytes in all other states
             break;
     }
     bmodbus->byte_count++;
@@ -142,7 +158,46 @@ static void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microsec
 }
 
 static void bmodbus_client_loop(modbus_client_t *bmodbus, uint32_t microsecond){
+    //FIXME -- currently not implemented
+    MODBUS_UNUSED(bmodbus);
+    MODBUS_UNUSED(microsecond);
     printf("bmodbus_client_loop\n");
+}
+
+static void bmodbus_encode_client_response(modbus_client_t *bmodbus){
+    uint16_t temp1, temp2, response_crc=0xffff;
+    int i;
+    //This takes the request and encodes it into the response (assuming processing is completed)
+    switch (bmodbus->function){
+        case 6:
+        case 16:
+            //If failed return no response
+            if(bmodbus->payload.request.result){
+                bmodbus->payload.response.size = 0;
+                break;
+            }
+            //Store values from the request for the response
+            temp1 = bmodbus->payload.request.size;
+            temp2 = bmodbus->payload.request.address;
+            bmodbus->payload.response.size = 6;
+            bmodbus->payload.response.data[2] = (temp2 & 0xFF00) >> 8;
+            bmodbus->payload.response.data[3] = temp2 & 0xFF;
+            bmodbus->payload.response.data[4] = (temp1 & 0xFF00) >> 8;
+            bmodbus->payload.response.data[5] = temp1 & 0xFF;
+            break;
+    }
+    if(bmodbus->payload.response.size) {
+        //All responses start the same...
+        bmodbus->payload.response.data[0] = bmodbus->client_address;
+        bmodbus->payload.response.data[1] = bmodbus->function;
+        //Calculate the CRC
+        for (i = 0; i < bmodbus->payload.response.size; i++) {
+            response_crc = crc_update(response_crc, bmodbus->payload.response.data[i]);
+        }
+        bmodbus->payload.response.data[bmodbus->payload.response.size] = response_crc & 0xFF;
+        bmodbus->payload.response.data[bmodbus->payload.response.size + 1] = (response_crc & 0xFF00) >> 8;
+        bmodbus->payload.response.size += 2;
+    }
 }
 
 static modbus_client_t modbus1;
@@ -154,6 +209,23 @@ void modbus1_next_byte(uint32_t microseconds, uint8_t byte){
 }
 void modbus1_single_loop(uint32_t microseconds){
     bmodbus_client_loop(&modbus1, microseconds);
+}
+modbus_request_t * modbus1_get_request(void){
+    if(modbus1.state == CLIENT_STATE_PROCESSING_REQUEST){
+        return &(modbus1.payload.request);
+    }
+    return NULL;
+}
+modbus_uart_response_t * modbus1_get_response(void){
+    if(modbus1.state == CLIENT_STATE_PROCESSING_REQUEST){
+        //Here we process the request data structure into the UART response
+        bmodbus_encode_client_response(&modbus1);
+        modbus1.state = CLIENT_STATE_SENDING_RESPONSE;
+        return &(modbus1.payload.response);
+    }else if(modbus1.state == CLIENT_STATE_SENDING_RESPONSE){
+        return &(modbus1.payload.response);
+    }
+    return NULL;
 }
 
 #ifdef UNIT_TESTING
