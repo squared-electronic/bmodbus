@@ -235,7 +235,14 @@ void test_write_coils(void){
     }
 
     response = modbus1_get_response();
-    TEST_ASSERT_EQUAL(NULL, response); //Introducing a false failure to ensure CI is working.
+    TEST_ASSERT_NOT_EQUAL(NULL, response); //Ensure the uart response is ready
+    TEST_ASSERT_EQUAL(8, response->size);
+    TEST_ASSERT_EQUAL(0x02, response->data[0]);
+    TEST_ASSERT_EQUAL(0x0f, response->data[1]);
+    TEST_ASSERT_EQUAL(0x12, response->data[2]);
+    TEST_ASSERT_EQUAL(0x34, response->data[3]);
+    TEST_ASSERT_EQUAL(0x07, response->data[4]);
+    TEST_ASSERT_EQUAL(0xd0, response->data[5]);
 }
 
 int main(void) {
