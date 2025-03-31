@@ -197,7 +197,7 @@ static void bmodbus_client_loop(modbus_client_t *bmodbus, uint32_t microsecond){
 }
 
 static void bmodbus_encode_client_response(modbus_client_t *bmodbus){
-    uint16_t temp1, temp2, response_crc=0xffff;
+    uint16_t temp1, temp2;
     int i;
     //This takes the request and encodes it into the response (assuming processing is completed)
     switch (bmodbus->function){
@@ -268,6 +268,7 @@ static void bmodbus_encode_client_response(modbus_client_t *bmodbus){
             break;
     }
     if(bmodbus->payload.response.size) {
+        uint16_t response_crc = 0xFFFF;
         //All responses start the same...
         bmodbus->payload.response.data[0] = bmodbus->client_address;
         bmodbus->payload.response.data[1] = bmodbus->function;
