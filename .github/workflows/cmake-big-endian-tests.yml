@@ -44,10 +44,10 @@ jobs:
             fi
           #  which cmake
           #  echo ::set-output name=cmake::$(which cmake)
-          #  echo ::set-output name=uname::$(uname -a)
-          #  cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-          #  cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-          #  ctest -C ${{env.BUILD_TYPE}} --output-on-failure
+            echo ::set-output name=uname::$(uname -a)
+            cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+            cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+            ctest -C ${{env.BUILD_TYPE}} --output-on-failure
 
       - name: Get the output
         # Echo the `uname` output parameter from the `runcmd` step
