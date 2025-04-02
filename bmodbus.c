@@ -17,11 +17,11 @@
  */
 
 #ifndef MODBUS_HTONS
-//#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define MODBUS_HTONS(x) ((((x) & 0xFF) << 8) | (((x) & 0xFF00) >> 8))
-//#else
-//#define MODBUS_HTONS(x) (x)
-//#endif
+#else
+#define MODBUS_HTONS(x) (x)
+#endif
 #endif
 
 #ifndef MODBUS_MEMMOVE
