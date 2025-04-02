@@ -166,9 +166,9 @@ void test_read_input_status(void){
     TEST_ASSERT_EQUAL(0x0c4, request->address);
     TEST_ASSERT_EQUAL(0x016, request->size); //Number of bits!
 
-    request->data[0] = 0xdead;
-    request->data[1] = 0xbeef;
-
+    ((uint8_t*)(request->data))[0] = 0xad;
+    ((uint8_t*)(request->data))[1] = 0xde;
+    ((uint8_t*)(request->data))[2] = 0xef;
     response = modbus1_get_response();
     TEST_ASSERT_NOT_EQUAL_MESSAGE(NULL, response, "modbus response is not ready");
     TEST_ASSERT_EQUAL((0x016 + 7)/8 + 5, response->size);
@@ -198,8 +198,9 @@ void test_read_coil(void){
     TEST_ASSERT_EQUAL(0x1234, request->address);
     TEST_ASSERT_EQUAL(0x7d0, request->size); //Number of bits!
 
-    request->data[0] = 0xdead;
-    request->data[1] = 0xbeef;
+    ((uint8_t*)(request->data))[0] = 0xad;
+    ((uint8_t*)(request->data))[1] = 0xde;
+    ((uint8_t*)(request->data))[2] = 0xef;
 
     response = modbus1_get_response();
     TEST_ASSERT_NOT_EQUAL_MESSAGE(NULL, response, "modbus response is not ready");
