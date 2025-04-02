@@ -49,8 +49,8 @@ jobs:
             uname -a
             echo ::set-output name=uname::$(uname -a)
             echo "CMake version"
-            which cmake
-            echo ::set-output name=cmake::$(which cmake)
+          #  which cmake
+          #  echo ::set-output name=cmake::$(which cmake)
           #  echo ::set-output name=uname::$(uname -a)
           #  cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
           #  cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
