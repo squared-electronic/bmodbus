@@ -44,7 +44,7 @@ jobs:
             fi
             cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
             cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-            ctest -C ${{env.BUILD_TYPE}} --output-on-failure
+            ctest -C ${{env.BUILD_TYPE}} --output-on-failure --test-dir ${{github.workspace}}/build
 
       - name: Get the output
         # Echo the `uname` output parameter from the `runcmd` step
