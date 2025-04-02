@@ -140,8 +140,9 @@ static void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microsec
             }
             break;
         case CLIENT_STATE_FOOTER:
+            bmodbus->crc.half = MODBUS_HTONS(bmodbus->crc.half);
             //Here we verify the CRC
-            if(bmodbus->crc.byte[0] == byte){
+            if(bmodbus->crc.byte[1] == byte){
                 bmodbus->state = CLIENT_STATE_FOOTER2;
             }else{
                 //FIXME bad CRC
@@ -149,7 +150,7 @@ static void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microsec
             }
             break;
         case CLIENT_STATE_FOOTER2:
-            if(bmodbus->crc.byte[1] == byte){
+            if(bmodbus->crc.byte[0] == byte){
                 //FIXME --  either process the request OR just wait for a polling entry (pending request)
                 bmodbus->payload.request.function = bmodbus->function;
                 bmodbus->payload.request.address = bmodbus->header.word[0];
