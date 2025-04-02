@@ -49,6 +49,11 @@ jobs:
             uname -a
             echo ::set-output name=uname::$(uname -a)
             echo "CMake version"
+            if which cmake > /dev/null 2>&1; then
+              echo "cmake is in the PATH"
+            else
+              echo "cmake is NOT in the PATH"
+            fi
           #  which cmake
           #  echo ::set-output name=cmake::$(which cmake)
           #  echo ::set-output name=uname::$(uname -a)
