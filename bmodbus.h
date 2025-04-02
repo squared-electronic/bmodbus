@@ -12,6 +12,10 @@
 
 #ifndef BMODBUS_H
 #define BMODBUS_H
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "bmb_config.h"
 
 #ifndef BMB_MAXIMUM_MESSAGE_SIZE
@@ -69,5 +73,8 @@ extern modbus_request_t * modbus1_get_request(void);
 extern modbus_uart_response_t * modbus1_get_response(void);
 extern void modbus1_response_send_complete(void);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif //BMODBUS_BMODBUS_H
