@@ -28,7 +28,6 @@ void test_client_simple_write(void) {
     fake_time += byte_timing_microseconds(38400) * 1; // 1 byte
     for(uint16_t i=0;i<sizeof(writing_registers_address_0x0708_at_slave_2);i++) {
         //Ensure we are not giving a response
-        printf("byte %d, state %d\n", i, modbus1_testing->state);
         TEST_ASSERT_EQUAL_MESSAGE(NULL, modbus1_get_request(), "modbus request is ready too early");
         modbus1_next_byte(fake_time, writing_registers_address_0x0708_at_slave_2[i]);
         fake_time += byte_timing_microseconds(38400) * 1; // 1 byte
