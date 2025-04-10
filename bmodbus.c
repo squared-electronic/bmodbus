@@ -40,7 +40,7 @@ static void modbus_memmove(void * dst, void * src, uint16_t count) {
 #endif
 #define MODBUS_UNUSED(x) (void)(x)
 
-void bmodbus_init(modbus_client_t *bmodbus, uint32_t interframe_delay, uint8_t client_address){
+void bmodbus_client_init(modbus_client_t *bmodbus, uint32_t interframe_delay, uint8_t client_address){
     bmodbus->state = CLIENT_STATE_IDLE;
     bmodbus->interframe_delay = interframe_delay;
     bmodbus->client_address = client_address;
@@ -48,8 +48,8 @@ void bmodbus_init(modbus_client_t *bmodbus, uint32_t interframe_delay, uint8_t c
     bmodbus->byte_count = 0;
 }
 
-void bmodbus_deinit(modbus_client_t *bmodbus){
-    printf("bmodbus_deinit\n");
+void bmodbus_client_deinit(modbus_client_t *bmodbus){
+    printf("bmodbus_client_deinit\n");
     bmodbus->state = CLIENT_NO_INIT;
 }
 
@@ -283,14 +283,14 @@ static void bmodbus_encode_client_response(modbus_client_t *bmodbus){
     }
 }
 
-modbus_request_t * bmodbus_get_request(modbus_client_t * bmodbus){
+modbus_request_t * bmodbus_client_get_request(modbus_client_t * bmodbus){
     if(bmodbus->state == CLIENT_STATE_PROCESSING_REQUEST){
         return &(bmodbus->payload.request);
     }
     return NULL;
 }
 
-modbus_uart_response_t * bmodbus_get_response(modbus_client_t * bmodbus){
+modbus_uart_response_t * bmodbus_client_get_response(modbus_client_t * bmodbus){
     if(bmodbus->state == CLIENT_STATE_PROCESSING_REQUEST){
         //Here we process the request data structure into the UART response
         bmodbus_encode_client_response(bmodbus);
@@ -302,7 +302,7 @@ modbus_uart_response_t * bmodbus_get_response(modbus_client_t * bmodbus){
     return NULL;
 }
 
-void bmodbus_send_complete(modbus_client_t * bmodbus){
+void bmodbus_client_send_complete(modbus_client_t * bmodbus){
     //This is called when the response has been sent
     if(bmodbus->state == CLIENT_STATE_SENDING_RESPONSE){
         bmodbus->state = CLIENT_STATE_IDLE;

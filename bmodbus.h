@@ -16,6 +16,10 @@
 extern "C" {
 #endif
 
+#define BMODBUS_VERSION_MAJOR   (1)
+#define BMODBUS_VERSION_MINOR   (0)
+
+//This can be used to modify the maximum message size to something other than 256 bytes -- it reduces the RAM required
 #ifndef BMB_MAXIMUM_MESSAGE_SIZE
 #define BMB_MAXIMUM_MESSAGE_SIZE 256
 #endif
@@ -87,9 +91,9 @@ typedef struct{
  * @note This function must be called before any other modbus functions
  * @example
  *    modbus_client_t modbus1;
- *    bmodbus_init(&modbus1, INTERFRAME_DELAY_MICROSECONDS(38400), client_address);
+ *    bmodbus_client_init(&modbus1, INTERFRAME_DELAY_MICROSECONDS(38400), client_address);
  */
-extern void bmodbus_init(modbus_client_t *bmodbus, uint32_t interframe_delay, uint8_t client_address);
+extern void bmodbus_client_init(modbus_client_t *bmodbus, uint32_t interframe_delay, uint8_t client_address);
 /**
  * @brief send the next byte to the modbus client
  *
@@ -111,13 +115,13 @@ extern void bmodbus_client_loop(modbus_client_t *bmodbus, uint32_t microsecond);
  *
  * @note This function is typically called from the main loop to return a request to the application. The application should call modbus_finish_request() when it's done with the request.
  */
-extern modbus_request_t * bmodbus_get_request(modbus_client_t *bmodbus);
+extern modbus_request_t * bmodbus_client_get_request(modbus_client_t *bmodbus);
 /**
  * @brief Get the bytes to send to the serial port after the request processing is complete.
  * @param bmodbus - the modbus client instance
  * @return a pointer to the response, or NULL if there's no response
  */
-extern modbus_uart_response_t * bmodbus_get_response(modbus_client_t * bmodbus);
+extern modbus_uart_response_t * bmodbus_client_get_response(modbus_client_t * bmodbus);
 /**
  * @brief Update the state machine
  *
@@ -126,7 +130,17 @@ extern modbus_uart_response_t * bmodbus_get_response(modbus_client_t * bmodbus);
  *
  * @note This function should be called when the response is sent. It will reset the state machine and prepare for the next request.
  */
-extern void bmodbus_send_complete(modbus_client_t * bmodbus);
+extern void bmodbus_client_send_complete(modbus_client_t * bmodbus);
+
+/**
+ * @brief Deinitialize the modbus client
+ *
+ * @param bmodbus
+ * @return none
+ *
+ * @note This function should be called when the modbus client is no longer needed.
+ */
+extern void bmodbus_client_deinit(modbus_client_t *bmodbus);
 
 //Utility for calculating the minimum interfame delay -- which is the time from receiving the last byte of the request to sending the first byte of the response
 //This is used to calculate the interbyte delay (if used). It should be 3.5 times the time it takes to send a byte or 1.75ms when > 19200bps
