@@ -7,7 +7,6 @@
 #include <string.h>
 
 #include "bmodbus.h"
-#include "bmodbus_internals.h"
 #include "unity.h"
 
 
