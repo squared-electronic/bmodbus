@@ -28,9 +28,9 @@ Future stuff:
 
 # Usage
 There are three main ways to use this library, and they all share some common elements.
-1. Runs in interrupts (requires callbacks and serial writing routine).
-2. Runs only in the main loop.
-3. In both interrupts and the main loop.
+1. Runs in interrupts (requires callbacks and serial writing routine). -- Not tested
+2. Runs only in the main loop. Currently tested.
+3. In both interrupts and the main loop. -- Not tested
 
 //Describe limitations of each here
 | Feature | Only in interrupts | Only in main loop | In both |
@@ -41,26 +41,49 @@ There are three main ways to use this library, and they all share some common el
 All three of these methods assume you have a UART peripheral that is set up and working. 
 It also assumes you have a way of getting time in microseconds (at least 32 bits of it). 
 
+## Only in Main Loop
+This is the simplest implementation and is easy to do in an arduino or any other environment.
+```c
+#include "bmodbus.h"
+
+bmodbus_client_t mb;
+void setup(){
+    Serial.begin(38400);
+    //Setup a modbus instance for client/slave address 2
+    bmodbus_client_init(&mb, INTERFRAME_DELAY_MICROSECONDS(38400), 2);
+}
+
+void loop(){
+    if(Serial.available(){
+        uint8_t next = Serial.read();
+        bmodbus_client_next_byte(&mb, micros(), Serial.read());
+        //If there's a message, handle it
+        bmodbus_client_request_t * request = bmodbus_client_get_request(&mb);
+        if(request != NULL){
+            //HANDLE the requests by updating the *request
+            ...
+            //End of handlers
+            
+            //Now grab the response in a format the serial port understands
+            modbus_uart_response_t * response = bmodbus_client_get_response(&mb);
+            Serial.write(response->data, response->length);
+            
+        }
+    }
+}
+```
+
 ## Only in Interrupts
 When we use it via the interrupts we must have the receive interrupt (RX) directly setup properly on the UART peripheral.
 This is not trivial in arduinos, since they Arduino libraries don't expose the RX interrupt directly.
 
 This will call the callback methods directly from the interrupt -- allowing your application to be as responsive as possible.
 ```c
-//bmb_config.h
-#define BMB1_CLIENT
-#define BMB1_USE_INTERRUPTS
-#define BMB1_USE_REGISTERS
-//#define BMB1_UART_INTERRUPT_HANDLER HAL_UART_IRQHandler
-#define BMB1_REGISTERS_WRITE        modbus_registers_write
-#define BMB1_REGISTERS_READ         modbus_regsiters_read
-#define BMB1_SERIAL_WRITE           uart_transmit
-#define BMB1_BAUD                   19200
-```
-
-```c
-#include "bmb_config.h"
 #include "bmodbus.h"
+
+
+TK
+
 
 //Call from interrupt
 void HARDWARE_UART_RX_ISR(void){
