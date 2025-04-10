@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "bmodbus.h"
-#include "bmodbus_internals.h"
 /* Headers of requests:
  * 1 read coils = 2 byte starting address, 2 byte quantity of coils
  * 2 read discrete inputs = 2 byte starting address, 2 byte quantity of inputs
@@ -41,14 +40,15 @@ static void modbus_memmove(void * dst, void * src, uint16_t count) {
 #endif
 #define MODBUS_UNUSED(x) (void)(x)
 
-static void bmodbus_init(modbus_client_t *bmodbus, uint32_t interframe_delay, uint8_t client_address){
+void bmodbus_init(modbus_client_t *bmodbus, uint32_t interframe_delay, uint8_t client_address){
     bmodbus->state = CLIENT_STATE_IDLE;
     bmodbus->interframe_delay = interframe_delay;
     bmodbus->client_address = client_address;
     bmodbus->crc.half = 0xFFFF;
+    bmodbus->byte_count = 0;
 }
 
-static void bmodbus_deinit(modbus_client_t *bmodbus){
+void bmodbus_deinit(modbus_client_t *bmodbus){
     printf("bmodbus_deinit\n");
     bmodbus->state = CLIENT_NO_INIT;
 }
@@ -77,7 +77,7 @@ static uint16_t crc_update(uint16_t crc, uint8_t byte) {
     return crc;
 }
 
-static void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microseconds, uint8_t byte){
+void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microseconds, uint8_t byte){
     //If the time delta is greater than the interframe delay, we should reset the state machine, and then process from scratch
     if((microseconds - bmodbus->last_microseconds) > bmodbus->interframe_delay){
         bmodbus->state = CLIENT_STATE_IDLE;
@@ -190,7 +190,7 @@ static void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microsec
     }
 }
 
-static void bmodbus_client_loop(modbus_client_t *bmodbus, uint32_t microsecond){
+void bmodbus_client_loop(modbus_client_t *bmodbus, uint32_t microsecond){
     //FIXME -- currently not implemented
     MODBUS_UNUSED(bmodbus);
     MODBUS_UNUSED(microsecond);
@@ -283,34 +283,30 @@ static void bmodbus_encode_client_response(modbus_client_t *bmodbus){
     }
 }
 
-static modbus_client_t modbus1;
-void modbus1_init(uint8_t client_address){
-    bmodbus_init(&modbus1, INTERFRAME_DELAY_MICROSECONDS(BMB1_BAUDRATE), client_address);
-}
-void modbus1_next_byte(uint32_t microseconds, uint8_t byte){
-    bmodbus_client_next_byte(&modbus1, microseconds, byte);
-}
-void modbus1_single_loop(uint32_t microseconds){
-    bmodbus_client_loop(&modbus1, microseconds);
-}
-modbus_request_t * modbus1_get_request(void){
-    if(modbus1.state == CLIENT_STATE_PROCESSING_REQUEST){
-        return &(modbus1.payload.request);
-    }
-    return NULL;
-}
-modbus_uart_response_t * modbus1_get_response(void){
-    if(modbus1.state == CLIENT_STATE_PROCESSING_REQUEST){
-        //Here we process the request data structure into the UART response
-        bmodbus_encode_client_response(&modbus1);
-        modbus1.state = CLIENT_STATE_SENDING_RESPONSE;
-        return &(modbus1.payload.response);
-    }else if(modbus1.state == CLIENT_STATE_SENDING_RESPONSE){
-        return &(modbus1.payload.response);
+modbus_request_t * bmodbus_get_request(modbus_client_t * bmodbus){
+    if(bmodbus->state == CLIENT_STATE_PROCESSING_REQUEST){
+        return &(bmodbus->payload.request);
     }
     return NULL;
 }
 
-#ifdef UNIT_TESTING
-modbus_client_t * modbus1_testing = &modbus1;
-#endif
+modbus_uart_response_t * bmodbus_get_response(modbus_client_t * bmodbus){
+    if(bmodbus->state == CLIENT_STATE_PROCESSING_REQUEST){
+        //Here we process the request data structure into the UART response
+        bmodbus_encode_client_response(bmodbus);
+        bmodbus->state = CLIENT_STATE_SENDING_RESPONSE;
+        return &(bmodbus->payload.response);
+    }else if(bmodbus->state == CLIENT_STATE_SENDING_RESPONSE){
+        return &(bmodbus->payload.response);
+    }
+    return NULL;
+}
+
+void bmodbus_send_complete(modbus_client_t * bmodbus){
+    //This is called when the response has been sent
+    if(bmodbus->state == CLIENT_STATE_SENDING_RESPONSE){
+        bmodbus->state = CLIENT_STATE_IDLE;
+        bmodbus->byte_count = 0;
+        bmodbus->crc.half = 0xFFFF;
+    }
+}
