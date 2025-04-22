@@ -32,8 +32,12 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #ifndef MODBUS_HTONS
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define MODBUS_HTONS(x) ((((x) & 0xFF) << 8) | (((x) & 0xFF00) >> 8))
+#define MODBUS_FIRST_BYTE(X) ((uint8_t)((X) >> 8))
+#define MODBUS_SECOND_BYTE(X) ((uint8_t)(X))
 #else
 #define MODBUS_HTONS(x) (x)
+#define MODBUS_FIRST_BYTE(X) ((uint8_t)(X))
+#define MODBUS_SECOND_BYTE(X) ((uint8_t)((X) >> 8))
 #endif
 #endif
 
@@ -383,18 +387,16 @@ modbus_uart_request_t * modbus_master_send_internal(modbus_master_t *bmodbus, ui
         }
     }else{
         uint8_t temp;
-        start_address = MODBUS_HTONS(start_address);
-        temp = start_address & 0xFF;
+        temp = MODBUS_FIRST_BYTE(start_address);
         crc = crc_update(crc, temp);
         bmodbus->payload.request.data[2] = temp;
-        temp = (start_address & 0xFF00) >> 8;
+        temp = MODBUS_SECOND_BYTE(start_address);
         crc = crc_update(crc, temp);
         bmodbus->payload.request.data[3] = temp;
-        value_or_count = MODBUS_HTONS(value_or_count);
-        temp = value_or_count & 0xFF;
+        temp = MODBUS_FIRST_BYTE(value_or_count);
         crc = crc_update(crc, temp);
         bmodbus->payload.request.data[4] = temp;
-        temp = (value_or_count & 0xFF00) >> 8;
+        temp = MODBUS_SECOND_BYTE(value_or_count);
         crc = crc_update(crc, temp);
         bmodbus->payload.request.data[5] = temp;
         uint16_bytes crc_bytes;
