@@ -340,6 +340,7 @@ modbus_uart_request_t * modbus_master_send_internal(modbus_master_t *bmodbus, ui
     int i;
     uint16_t crc = 0xFFFF;
     bmodbus->client_address = client_address;
+    bmodbus->register_address = start_address;
     bmodbus->function = function;
     bmodbus->byte_count = 0;
     bmodbus->payload.request.data[0] = client_address;
@@ -364,8 +365,8 @@ modbus_uart_request_t * modbus_master_send_internal(modbus_master_t *bmodbus, ui
         }
         uint16_bytes crc_bytes;
         crc_bytes.half = MODBUS_HTONS(crc);
-        bmodbus->payload.request.data[value_or_count * 2 + 7] = crc_bytes.byte[0];
-        bmodbus->payload.request.data[value_or_count * 2 + 8] = crc_bytes.byte[1];
+        bmodbus->payload.request.data[value_or_count * 2 + 7] = crc_bytes.byte[1];
+        bmodbus->payload.request.data[value_or_count * 2 + 8] = crc_bytes.byte[0];
         bmodbus->payload.request.size = value_or_count * 2 + 9;
     }else if(function == 15){
         bmodbus->payload.request.data[2] = (start_address & 0xFF00) >> 8;
@@ -382,22 +383,24 @@ modbus_uart_request_t * modbus_master_send_internal(modbus_master_t *bmodbus, ui
         }
     }else{
         uint8_t temp;
-        temp = (start_address & 0xFF00) >> 8;
-        crc = crc_update(crc, temp);
-        bmodbus->payload.request.data[2] = temp;
+        start_address = MODBUS_HTONS(start_address);
         temp = start_address & 0xFF;
         crc = crc_update(crc, temp);
+        bmodbus->payload.request.data[2] = temp;
+        temp = (start_address & 0xFF00) >> 8;
+        crc = crc_update(crc, temp);
         bmodbus->payload.request.data[3] = temp;
-        temp = (value_or_count & 0xFF00) >> 8;
+        value_or_count = MODBUS_HTONS(value_or_count);
+        temp = value_or_count & 0xFF;
         crc = crc_update(crc, temp);
         bmodbus->payload.request.data[4] = temp;
-        temp = value_or_count & 0xFF;
+        temp = (value_or_count & 0xFF00) >> 8;
         crc = crc_update(crc, temp);
         bmodbus->payload.request.data[5] = temp;
         uint16_bytes crc_bytes;
-        crc_bytes.half = crc;
-        bmodbus->payload.request.data[6] = crc_bytes.byte[0];
-        bmodbus->payload.request.data[7] = crc_bytes.byte[1];
+        crc_bytes.half = MODBUS_HTONS(crc);
+        bmodbus->payload.request.data[6] = crc_bytes.byte[1];
+        bmodbus->payload.request.data[7] = crc_bytes.byte[0];
         bmodbus->payload.request.size = 8;
         bmodbus->payload.request.expected_response_size = expected;
     }

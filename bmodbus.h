@@ -171,6 +171,7 @@ typedef struct{
     uint32_t last_microseconds;
     uint16_bytes crc;
     uint8_t client_address; //historically called slave address
+    uint16_t register_address;
     uint8_t function;
     uint8_t byte_count;
     union{
