@@ -266,15 +266,16 @@ void test_master_write_register(void){
     TEST_ASSERT_NOT_EQUAL(NULL, sending_request);
     TEST_ASSERT_EQUAL(8, sending_request->size);
     for(i=0;i<sending_request->size;i++){
+        printf("sending_request->data[%d] = 0x%02x\n", i, sending_request->data[i]);
         bmodbus_client_next_byte(&modbus_client, fake_time, sending_request->data[i]);
         fake_time += byte_timing_microseconds(38400) * 1; // 1 byte
     }
     response = bmodbus_client_get_request(&modbus_client);
     TEST_ASSERT_NOT_EQUAL(NULL, response);
     TEST_ASSERT_EQUAL(response->function, 0x06);
-    TEST_ASSERT_EQUAL(response->address, 0x0708);
     TEST_ASSERT_EQUAL(response->size, 1);
     TEST_ASSERT_EQUAL(response->data[0], 0xdead);
+    TEST_ASSERT_EQUAL(response->address, 0x0708);
 }
 
 void test_master_write_registers(void){
