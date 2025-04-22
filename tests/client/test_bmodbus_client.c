@@ -266,7 +266,6 @@ void test_master_write_register(void){
     TEST_ASSERT_NOT_EQUAL(NULL, sending_request);
     TEST_ASSERT_EQUAL(8, sending_request->size);
     for(i=0;i<sending_request->size;i++){
-        printf("sending_request->data[%d] = 0x%02x\n", i, sending_request->data[i]);
         bmodbus_client_next_byte(&modbus_client, fake_time, sending_request->data[i]);
         fake_time += byte_timing_microseconds(38400) * 1; // 1 byte
     }
@@ -290,7 +289,7 @@ void test_master_write_registers(void){
     uint16_t data[2] = {0xdead, 0xbeef};
     sending_request = bmodbus_master_write_multiple_registers(&modbus_master, 2, 0x0708, 2, data);
     TEST_ASSERT_NOT_EQUAL(NULL, sending_request);
-    TEST_ASSERT_EQUAL(8 + 4, sending_request->size);
+    TEST_ASSERT_EQUAL(9 + sizeof(data), sending_request->size);
     for(i=0;i<sending_request->size;i++){
         bmodbus_client_next_byte(&modbus_client, fake_time, sending_request->data[i]);
         fake_time += byte_timing_microseconds(38400) * 1; // 1 byte
@@ -315,5 +314,6 @@ int main(void) {
     RUN_TEST(test_read_coil);
     RUN_TEST(test_write_coils);
     RUN_TEST(test_master_write_register);
+    RUN_TEST(test_master_write_registers);
     return UNITY_END();
 }

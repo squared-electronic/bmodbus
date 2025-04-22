@@ -351,20 +351,21 @@ modbus_uart_request_t * modbus_master_send_internal(modbus_master_t *bmodbus, ui
     bmodbus->payload.request.data[1] = function;
     crc = crc_update(crc, function);
     if(function == 16) { //value contains count in these functions
-        bmodbus->payload.request.data[2] = (start_address & 0xFF00) >> 8;
-        bmodbus->payload.request.data[3] = start_address & 0xFF;
-        bmodbus->payload.request.data[4] = (value_or_count & 0xFF00) >> 8;
-        bmodbus->payload.request.data[5] = value_or_count & 0xFF;
+        bmodbus->payload.request.data[2] = MODBUS_FIRST_BYTE(start_address);
+        bmodbus->payload.request.data[3] = MODBUS_SECOND_BYTE(start_address);
+        bmodbus->payload.request.data[4] = MODBUS_FIRST_BYTE(value_or_count);
+        bmodbus->payload.request.data[5] = MODBUS_SECOND_BYTE(value_or_count);
         bmodbus->payload.request.data[6] = value_or_count * 2;
-        for(i=2; i<6; i++){
+        for(i=2; i<7; i++){
             crc = crc_update(crc, bmodbus->payload.request.data[i]);
         }
         for (i = 0; i < value_or_count; i++) {
-            uint8_t temp = (data[i] & 0xFF00) >> 8;
+            uint8_t temp = MODBUS_FIRST_BYTE(data[i]);
             bmodbus->payload.request.data[i * 2 + 7] = temp;
-            crc = crc_update(crc, function);
-            temp = data[i] & 0xFF;
+            crc = crc_update(crc, temp);
+            temp = MODBUS_SECOND_BYTE(data[i]);
             bmodbus->payload.request.data[i * 2 + 8] = temp;
+            crc = crc_update(crc, temp);
         }
         uint16_bytes crc_bytes;
         crc_bytes.half = MODBUS_HTONS(crc);
@@ -372,10 +373,10 @@ modbus_uart_request_t * modbus_master_send_internal(modbus_master_t *bmodbus, ui
         bmodbus->payload.request.data[value_or_count * 2 + 8] = crc_bytes.byte[0];
         bmodbus->payload.request.size = value_or_count * 2 + 9;
     }else if(function == 15){
-        bmodbus->payload.request.data[2] = (start_address & 0xFF00) >> 8;
-        bmodbus->payload.request.data[3] = start_address & 0xFF;
-        bmodbus->payload.request.data[4] = (value_or_count & 0xFF00) >> 8;
-        bmodbus->payload.request.data[5] = value_or_count & 0xFF;
+        bmodbus->payload.request.data[2] = MODBUS_FIRST_BYTE(start_address);
+        bmodbus->payload.request.data[3] = MODBUS_SECOND_BYTE(start_address);
+        bmodbus->payload.request.data[4] = MODBUS_FIRST_BYTE(value_or_count);
+        bmodbus->payload.request.data[5] = MODBUS_SECOND_BYTE(value_or_count);
         bmodbus->payload.request.data[6] = (value_or_count + 7) / 8; //Number of bytes from number of bits
         for(i=2; i<7; i++){
             crc = crc_update(crc, bmodbus->payload.request.data[i]);
@@ -384,20 +385,18 @@ modbus_uart_request_t * modbus_master_send_internal(modbus_master_t *bmodbus, ui
             bmodbus->payload.request.data[i + 7] = ((uint8_t*)data)[i];
             crc = crc_update(crc, function);
         }
+        uint16_bytes crc_bytes;
+        crc_bytes.half = MODBUS_HTONS(crc);
+        bmodbus->payload.request.data[(value_or_count + 7) / 8 + 7] = crc_bytes.byte[1];
+        bmodbus->payload.request.data[(value_or_count + 7) / 8 + 8] = crc_bytes.byte[0];
     }else{
-        uint8_t temp;
-        temp = MODBUS_FIRST_BYTE(start_address);
-        crc = crc_update(crc, temp);
-        bmodbus->payload.request.data[2] = temp;
-        temp = MODBUS_SECOND_BYTE(start_address);
-        crc = crc_update(crc, temp);
-        bmodbus->payload.request.data[3] = temp;
-        temp = MODBUS_FIRST_BYTE(value_or_count);
-        crc = crc_update(crc, temp);
-        bmodbus->payload.request.data[4] = temp;
-        temp = MODBUS_SECOND_BYTE(value_or_count);
-        crc = crc_update(crc, temp);
-        bmodbus->payload.request.data[5] = temp;
+        bmodbus->payload.request.data[2] = MODBUS_FIRST_BYTE(start_address);
+        bmodbus->payload.request.data[3] = MODBUS_SECOND_BYTE(start_address);
+        bmodbus->payload.request.data[4] = MODBUS_FIRST_BYTE(value_or_count);
+        bmodbus->payload.request.data[5] = MODBUS_SECOND_BYTE(value_or_count);
+        for(i=0;i<4;i++){
+            crc = crc_update(crc, bmodbus->payload.request.data[i+2]);
+        }
         uint16_bytes crc_bytes;
         crc_bytes.half = MODBUS_HTONS(crc);
         bmodbus->payload.request.data[6] = crc_bytes.byte[1];
