@@ -32,14 +32,13 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #ifndef MODBUS_HTONS
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define MODBUS_HTONS(x) ((((x) & 0xFF) << 8) | (((x) & 0xFF00) >> 8))
-#define MODBUS_FIRST_BYTE(X) ((uint8_t)((X) >> 8))
-#define MODBUS_SECOND_BYTE(X) ((uint8_t)(0xff & X))
 #else
 #define MODBUS_HTONS(x) (x)
-#define MODBUS_FIRST_BYTE(X) ((uint8_t)(0xff & X))
-#define MODBUS_SECOND_BYTE(X) ((uint8_t)((X) >> 8))
 #endif
 #endif
+
+#define MODBUS_FIRST_BYTE(X) ((uint8_t)((X) >> 8))
+#define MODBUS_SECOND_BYTE(X) ((uint8_t)(0xff & X))
 
 #ifndef MODBUS_MEMMOVE
 static void modbus_memmove(void * dst, void * src, uint16_t count) {
