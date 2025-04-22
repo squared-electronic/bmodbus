@@ -49,7 +49,7 @@ typedef struct {
 typedef struct {
     uint8_t data[BMB_MAXIMUM_MESSAGE_SIZE];
     uint8_t size; //It is the number of bytes in the response
-}modbus_uart_response_t;
+}modbus_uart_data_t;
 
 typedef enum{
     CLIENT_NO_INIT=0, CLIENT_STATE_IDLE, CLIENT_STATE_WAITING_FOR_NEXT_MESSAGE, CLIENT_STATE_FUNCTION_CODE, CLIENT_STATE_HEADER, CLIENT_STATE_HEADER_CHECK, CLIENT_STATE_DATA, CLIENT_STATE_FOOTER, CLIENT_STATE_FOOTER2, CLIENT_STATE_PROCESSING_REQUEST, CLIENT_STATE_SENDING_RESPONSE
@@ -86,7 +86,7 @@ typedef struct{
     //Payload is outside of this struct so it can be configured differently for each instance
     union{
         modbus_request_t request;
-        modbus_uart_response_t response;
+        modbus_uart_data_t response;
     }payload;
 
 }modbus_client_t;
@@ -133,7 +133,7 @@ extern modbus_request_t * bmodbus_client_get_request(modbus_client_t *bmodbus);
  * @param bmodbus - the modbus client instance
  * @return a pointer to the response, or NULL if there's no response
  */
-extern modbus_uart_response_t * bmodbus_client_get_response(modbus_client_t * bmodbus);
+extern modbus_uart_data_t * bmodbus_client_get_response(modbus_client_t * bmodbus);
 /**
  * @brief Update the state machine
  *
@@ -153,6 +153,42 @@ extern void bmodbus_client_send_complete(modbus_client_t * bmodbus);
  * @note This function should be called when the modbus client is no longer needed.
  */
 extern void bmodbus_client_deinit(modbus_client_t *bmodbus);
+
+
+typedef enum{
+    MASTER_NO_INIT=0, MASTER_STATE_IDLE, MASTER_STATE_SENDING_REQUEST, MASTER_STATE_WAITING_FOR_RESPONSE, MASTER_STATE_PROCESSING_RESPONSE
+}modbus_master_state_t;
+
+typedef struct{
+    uint8_t data[BMB_MAXIMUM_MESSAGE_SIZE];
+    uint8_t size; //It is the number of bytes in the response
+    uint8_t expected_response_size;
+}modbus_uart_request_t;
+
+typedef struct{
+    modbus_master_state_t state;
+    uint32_t interframe_delay;
+    uint32_t last_microseconds;
+    uint16_bytes crc;
+    uint8_t client_address; //historically called slave address
+    uint8_t function;
+    uint8_t byte_count;
+    union{
+        modbus_request_t response;
+        modbus_uart_request_t request;
+    }payload;
+}modbus_master_t;
+
+extern void bmodbus_master_init(modbus_master_t *bmodbus, uint32_t interframe_delay);
+extern void bmodbus_master_next_byte(modbus_master_t *bmodbus, uint32_t microseconds, uint8_t byte);
+extern modbus_uart_request_t * bmodbus_master_read_coils(modbus_master_t *bmodbus, uint8_t client_address, uint16_t start_address, uint16_t count);
+extern modbus_uart_request_t * bmodbus_master_read_discrete_inputs(modbus_master_t *bmodbus, uint8_t client_address, uint16_t start_address, uint16_t count);
+extern modbus_uart_request_t * bmodbus_master_read_holding_registers(modbus_master_t *bmodbus, uint8_t client_address, uint16_t start_address, uint16_t count);
+extern modbus_uart_request_t * bmodbus_master_read_input_registers(modbus_master_t *bmodbus, uint8_t client_address, uint16_t start_address, uint16_t count);
+extern modbus_uart_request_t * bmodbus_master_write_single_coil(modbus_master_t *bmodbus, uint8_t client_address, uint16_t address, uint16_t value);
+extern modbus_uart_request_t * bmodbus_master_write_single_register(modbus_master_t *bmodbus, uint8_t client_address, uint16_t address, uint16_t value);
+extern modbus_uart_request_t * bmodbus_master_write_multiple_coils(modbus_master_t *bmodbus, uint8_t client_address, uint16_t address, uint16_t count, uint8_t *data);
+extern modbus_uart_request_t * bmodbus_master_write_multiple_registers(modbus_master_t *bmodbus, uint8_t client_address, uint16_t address, uint16_t count, uint16_t *data);
 
 //Utility for calculating the minimum interfame delay -- which is the time from receiving the last byte of the request to sending the first byte of the response
 //This is used to calculate the interbyte delay (if used). It should be 3.5 times the time it takes to send a byte or 1.75ms when > 19200bps

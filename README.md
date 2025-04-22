@@ -65,9 +65,11 @@ void loop(){
             //End of handlers
             
             //Now grab the response in a format the serial port understands
-            modbus_uart_response_t * response = bmodbus_client_get_response(&mb);
+            modbus_uart_data_t * response = bmodbus_client_get_response(&mb);
             Serial.write(response->data, response->length);
             
+            //Notify the library that the response has been sent (and we are ready to receive another)
+            bmodbus_client_send_complete(&mb); 
         }
     }
 }

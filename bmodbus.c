@@ -304,7 +304,7 @@ modbus_request_t * bmodbus_client_get_request(modbus_client_t * bmodbus){
     return NULL;
 }
 
-modbus_uart_response_t * bmodbus_client_get_response(modbus_client_t * bmodbus){
+modbus_uart_data_t * bmodbus_client_get_response(modbus_client_t * bmodbus){
     if(bmodbus->state == CLIENT_STATE_PROCESSING_REQUEST){
         //Here we process the request data structure into the UART response
         bmodbus_encode_client_response(bmodbus);
@@ -323,4 +323,108 @@ void bmodbus_client_send_complete(modbus_client_t * bmodbus){
         bmodbus->byte_count = 0;
         bmodbus->crc.half = 0xFFFF;
     }
+}
+
+void bmodbus_master_init(modbus_master_t *bmodbus, uint32_t interframe_delay){
+    bmodbus->state = MASTER_STATE_IDLE;
+    bmodbus->interframe_delay = interframe_delay;
+    bmodbus->crc.half = 0xFFFF;
+    bmodbus->byte_count = 0;
+}
+
+void bmodbus_master_next_byte(modbus_master_t *bmodbus, uint32_t microseconds, uint8_t byte){
+
+}
+
+modbus_uart_request_t * modbus_master_send_internal(modbus_master_t *bmodbus, uint8_t client_address, uint8_t function, uint16_t start_address, uint16_t value_or_count, uint16_t * data, uint8_t expected){
+    int i;
+    uint16_t crc = 0xFFFF;
+    bmodbus->client_address = client_address;
+    bmodbus->function = function;
+    bmodbus->byte_count = 0;
+    bmodbus->payload.request.data[0] = client_address;
+    crc = crc_update(crc, client_address);
+    bmodbus->payload.request.data[1] = function;
+    crc = crc_update(crc, function);
+    if(function == 16) { //value contains count in these functions
+        bmodbus->payload.request.data[2] = (start_address & 0xFF00) >> 8;
+        bmodbus->payload.request.data[3] = start_address & 0xFF;
+        bmodbus->payload.request.data[4] = (value_or_count & 0xFF00) >> 8;
+        bmodbus->payload.request.data[5] = value_or_count & 0xFF;
+        bmodbus->payload.request.data[6] = value_or_count * 2;
+        for(i=2; i<6; i++){
+            crc = crc_update(crc, bmodbus->payload.request.data[i]);
+        }
+        for (i = 0; i < value_or_count; i++) {
+            uint8_t temp = (data[i] & 0xFF00) >> 8;
+            bmodbus->payload.request.data[i * 2 + 7] = temp;
+            crc = crc_update(crc, function);
+            temp = data[i] & 0xFF;
+            bmodbus->payload.request.data[i * 2 + 8] = temp;
+        }
+        uint16_bytes crc_bytes;
+        crc_bytes.half = MODBUS_HTONS(crc);
+        bmodbus->payload.request.data[value_or_count * 2 + 7] = crc_bytes.byte[0];
+        bmodbus->payload.request.data[value_or_count * 2 + 8] = crc_bytes.byte[1];
+        bmodbus->payload.request.size = value_or_count * 2 + 9;
+    }else if(function == 15){
+        bmodbus->payload.request.data[2] = (start_address & 0xFF00) >> 8;
+        bmodbus->payload.request.data[3] = start_address & 0xFF;
+        bmodbus->payload.request.data[4] = (value_or_count & 0xFF00) >> 8;
+        bmodbus->payload.request.data[5] = value_or_count & 0xFF;
+        bmodbus->payload.request.data[6] = (value_or_count + 7) / 8; //Number of bytes from number of bits
+        for(i=2; i<7; i++){
+            crc = crc_update(crc, bmodbus->payload.request.data[i]);
+        }
+        for (i = 0; i < (value_or_count + 7) / 8; i++) {
+            bmodbus->payload.request.data[i + 7] = ((uint8_t*)data)[i];
+            crc = crc_update(crc, function);
+        }
+    }else{
+        uint8_t temp;
+        temp = (start_address & 0xFF00) >> 8;
+        crc = crc_update(crc, temp);
+        bmodbus->payload.request.data[2] = temp;
+        temp = start_address & 0xFF;
+        crc = crc_update(crc, temp);
+        bmodbus->payload.request.data[3] = temp;
+        temp = (value_or_count & 0xFF00) >> 8;
+        crc = crc_update(crc, temp);
+        bmodbus->payload.request.data[4] = temp;
+        temp = value_or_count & 0xFF;
+        crc = crc_update(crc, temp);
+        bmodbus->payload.request.data[5] = temp;
+        uint16_bytes crc_bytes;
+        crc_bytes.half = crc;
+        bmodbus->payload.request.data[6] = crc_bytes.byte[0];
+        bmodbus->payload.request.data[7] = crc_bytes.byte[1];
+        bmodbus->payload.request.size = 8;
+        bmodbus->payload.request.expected_response_size = expected;
+    }
+    return &(bmodbus->payload.request);
+}
+
+modbus_uart_request_t * bmodbus_master_read_coils(modbus_master_t *bmodbus, uint8_t client_address, uint16_t start_address, uint16_t count){
+    return modbus_master_send_internal(bmodbus, client_address, 1, start_address, count, NULL, (count+7)/8 + 5);
+}
+modbus_uart_request_t * bmodbus_master_read_discrete_inputs(modbus_master_t *bmodbus, uint8_t client_address, uint16_t start_address, uint16_t count){
+    return modbus_master_send_internal(bmodbus, client_address, 2, start_address, count, NULL, (count+7)/8 + 5);
+}
+modbus_uart_request_t * bmodbus_master_read_holding_registers(modbus_master_t *bmodbus, uint8_t client_address, uint16_t start_address, uint16_t count){
+    return modbus_master_send_internal(bmodbus, client_address, 3, start_address, count, NULL, count*2 + 5);
+}
+modbus_uart_request_t * bmodbus_master_read_input_registers(modbus_master_t *bmodbus, uint8_t client_address, uint16_t start_address, uint16_t count){
+    return modbus_master_send_internal(bmodbus, client_address, 4, start_address, count, NULL, count*2 + 5);
+}
+modbus_uart_request_t * bmodbus_master_write_single_coil(modbus_master_t *bmodbus, uint8_t client_address, uint16_t address, uint16_t value){
+    return modbus_master_send_internal(bmodbus, client_address, 5, address, value, NULL, 8);
+}
+modbus_uart_request_t * bmodbus_master_write_single_register(modbus_master_t *bmodbus, uint8_t client_address, uint16_t address, uint16_t value){
+    return modbus_master_send_internal(bmodbus, client_address, 6, address, value, NULL, 8);
+}
+modbus_uart_request_t * bmodbus_master_write_multiple_coils(modbus_master_t *bmodbus, uint8_t client_address, uint16_t address, uint16_t count, uint8_t *data){
+    return modbus_master_send_internal(bmodbus, client_address, 15, address, count, (uint16_t*)data, 8);
+}
+modbus_uart_request_t * bmodbus_master_write_multiple_registers(modbus_master_t *bmodbus, uint8_t client_address, uint16_t address, uint16_t count, uint16_t *data){
+    return modbus_master_send_internal(bmodbus, client_address, 16, address, count, data, 8);
 }
