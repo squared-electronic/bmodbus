@@ -194,6 +194,10 @@ extern modbus_uart_request_t * bmodbus_master_write_multiple_registers(modbus_ma
 //Utility for calculating the minimum interfame delay -- which is the time from receiving the last byte of the request to sending the first byte of the response
 //This is used to calculate the interbyte delay (if used). It should be 3.5 times the time it takes to send a byte or 1.75ms when > 19200bps
 #define INTERFRAME_DELAY_MICROSECONDS(BAUDRATE) ((19200 < BAUDRATE) ? 1750 : (35000000 / BAUDRATE))
+
+//Utility for calculating the byte timing -- which is used when buffers are transfered.
+#define BYTE_TIMING_IN_MICROSECONDS(BAUDRATE) (1000000 / ((BAUDRATE)/10))
+
 #ifdef __cplusplus
 }
 #endif

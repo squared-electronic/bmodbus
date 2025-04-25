@@ -18,7 +18,6 @@ void tearDown(void) {
     // Clean up code after each test
 }
 
-#define byte_timing_microseconds(BAUDRATE) (1000000 / ((BAUDRATE)/10))
 
 void test_client_simple_write(void) {
     uint8_t writing_registers_address_0x0708_at_slave_2[] = {0x02, 0x10, 0x07, 0x08, 0x00, 0x02, 0x04, 0x02, 0x03, 0x04, 0x05, 0xe8, 0x06, };
@@ -27,12 +26,12 @@ void test_client_simple_write(void) {
     modbus_client_t * modbus1_testing = &modbus1;
     bmodbus_client_init(&modbus1, INTERFRAME_DELAY_MICROSECONDS(38400), 2);
     uint32_t fake_time = 0;
-    fake_time += byte_timing_microseconds(38400) * 1; // 1 byte
+    fake_time += BYTE_TIMING_IN_MICROSECONDS(38400) * 1; // 1 byte
     for(uint16_t i=0;i<sizeof(writing_registers_address_0x0708_at_slave_2);i++) {
         //Ensure we are not giving a response
         TEST_ASSERT_EQUAL_MESSAGE(NULL, bmodbus_client_get_request(&modbus1), "modbus request is ready too early");
         bmodbus_client_next_byte(modbus1_testing, fake_time, writing_registers_address_0x0708_at_slave_2[i]);
-        fake_time += byte_timing_microseconds(38400) * 1; // 1 byte
+        fake_time += BYTE_TIMING_IN_MICROSECONDS(38400) * 1; // 1 byte
     }
     TEST_ASSERT_NOT_EQUAL_MESSAGE(NULL, bmodbus_client_get_request(&modbus1), "modbus request is not ready");
     TEST_ASSERT_EQUAL_MESSAGE(CLIENT_STATE_PROCESSING_REQUEST, modbus1_testing->state, "modbus1_testing->state");
@@ -54,12 +53,12 @@ void test_client_single_write(void){
     modbus_client_t modbus1;
     bmodbus_client_init(&modbus1, INTERFRAME_DELAY_MICROSECONDS(38400), 2);
     uint32_t fake_time = 0;
-    fake_time += byte_timing_microseconds(38400) * 1; // 1 byte
+    fake_time += BYTE_TIMING_IN_MICROSECONDS(38400) * 1; // 1 byte
     for(uint16_t i=0;i<sizeof(writing_register_address_0x0708_at_slave_2);i++) {
         //Ensure we are not giving a response
         TEST_ASSERT_EQUAL_MESSAGE(NULL, bmodbus_client_get_request(&modbus1), "modbus request is ready too early");
         bmodbus_client_next_byte(&modbus1, fake_time, writing_register_address_0x0708_at_slave_2[i]);
-        fake_time += byte_timing_microseconds(38400) * 1; // 1 byte
+        fake_time += BYTE_TIMING_IN_MICROSECONDS(38400) * 1; // 1 byte
     }
     TEST_ASSERT_NOT_EQUAL_MESSAGE(NULL, bmodbus_client_get_request(&modbus1), "modbus request is not ready");
     TEST_ASSERT_EQUAL_MESSAGE(CLIENT_STATE_PROCESSING_REQUEST, modbus1.state, "modbus1.state");
@@ -80,12 +79,12 @@ void test_client_holding_read(void) {
     modbus_client_t modbus1;
     bmodbus_client_init(&modbus1, INTERFRAME_DELAY_MICROSECONDS(38400), 2);
     uint32_t fake_time = 0;
-    fake_time += byte_timing_microseconds(38400) * 1; // 1 byte
+    fake_time += BYTE_TIMING_IN_MICROSECONDS(38400) * 1; // 1 byte
 
     for (uint16_t i = 0; i < sizeof(reading_register_address_0x0708_at_slave_2); i++) {
         TEST_ASSERT_EQUAL_MESSAGE(NULL, bmodbus_client_get_request(&modbus1), "modbus request is ready too early");
         bmodbus_client_next_byte(&modbus1, fake_time, reading_register_address_0x0708_at_slave_2[i]);
-        fake_time += byte_timing_microseconds(38400) * 1; // 1 byte
+        fake_time += BYTE_TIMING_IN_MICROSECONDS(38400) * 1; // 1 byte
     }
 
     request = bmodbus_client_get_request(&modbus1);
@@ -114,12 +113,12 @@ void test_client_input_read(void) {
     modbus_client_t modbus1;
     bmodbus_client_init(&modbus1, INTERFRAME_DELAY_MICROSECONDS(38400), 2);
     uint32_t fake_time = 0;
-    fake_time += byte_timing_microseconds(38400) * 1; // 1 byte
+    fake_time += BYTE_TIMING_IN_MICROSECONDS(38400) * 1; // 1 byte
 
     for (uint16_t i = 0; i < sizeof(reading_registers_address_0x0708_at_slave_2); i++) {
         TEST_ASSERT_EQUAL(NULL, bmodbus_client_get_request(&modbus1));
         bmodbus_client_next_byte(&modbus1, fake_time, reading_registers_address_0x0708_at_slave_2[i]);
-        fake_time += byte_timing_microseconds(38400) * 1; // 1 byte
+        fake_time += BYTE_TIMING_IN_MICROSECONDS(38400) * 1; // 1 byte
     }
 
     request = bmodbus_client_get_request(&modbus1);
@@ -154,12 +153,12 @@ void test_read_input_status(void) {
     modbus_client_t modbus1;
     bmodbus_client_init(&modbus1, INTERFRAME_DELAY_MICROSECONDS(38400), 2);
     uint32_t fake_time = 0;
-    fake_time += byte_timing_microseconds(38400) * 1; // 1 byte
+    fake_time += BYTE_TIMING_IN_MICROSECONDS(38400) * 1; // 1 byte
 
     for (uint16_t i = 0; i < sizeof(reading_bits_address_0x00c4_at_slave_2); i++) {
         TEST_ASSERT_EQUAL(NULL, bmodbus_client_get_request(&modbus1));
         bmodbus_client_next_byte(&modbus1, fake_time, reading_bits_address_0x00c4_at_slave_2[i]);
-        fake_time += byte_timing_microseconds(38400) * 1; // 1 byte
+        fake_time += BYTE_TIMING_IN_MICROSECONDS(38400) * 1; // 1 byte
     }
 
     request = bmodbus_client_get_request(&modbus1);
@@ -188,12 +187,12 @@ void test_read_coil(void) {
     modbus_client_t modbus1;
     bmodbus_client_init(&modbus1, INTERFRAME_DELAY_MICROSECONDS(38400), 2);
     uint32_t fake_time = 0;
-    fake_time += byte_timing_microseconds(38400) * 1; // 1 byte
+    fake_time += BYTE_TIMING_IN_MICROSECONDS(38400) * 1; // 1 byte
 
     for (uint16_t i = 0; i < sizeof(reading_coil_address_0x1234_at_slave_2); i++) {
         TEST_ASSERT_EQUAL_MESSAGE(NULL, bmodbus_client_get_request(&modbus1), "modbus request is ready too early");
         bmodbus_client_next_byte(&modbus1, fake_time, reading_coil_address_0x1234_at_slave_2[i]);
-        fake_time += byte_timing_microseconds(38400) * 1; // 1 byte
+        fake_time += BYTE_TIMING_IN_MICROSECONDS(38400) * 1; // 1 byte
     }
 
     request = bmodbus_client_get_request(&modbus1);
@@ -223,12 +222,12 @@ void test_write_coils(void){
     memset(&modbus1, 0, sizeof(modbus_client_t));
     bmodbus_client_init(&modbus1, INTERFRAME_DELAY_MICROSECONDS(38400), 2);
     uint32_t fake_time = 0;
-    fake_time += byte_timing_microseconds(38400) * 1; // 1 byte
+    fake_time += BYTE_TIMING_IN_MICROSECONDS(38400) * 1; // 1 byte
     for(uint16_t i=0;i<sizeof(writing_coils_address_0x1234_at_slave_2);i++) {
         //Ensure we are not giving a response
         TEST_ASSERT_EQUAL_MESSAGE(NULL, bmodbus_client_get_request(&modbus1), "modbus request is ready too early");
         bmodbus_client_next_byte(&modbus1, fake_time, writing_coils_address_0x1234_at_slave_2[i]);
-        fake_time += byte_timing_microseconds(38400) * 1; // 1 byte
+        fake_time += BYTE_TIMING_IN_MICROSECONDS(38400) * 1; // 1 byte
         TEST_ASSERT_NOT_EQUAL(CLIENT_STATE_WAITING_FOR_NEXT_MESSAGE, modbus1.state);
     }
     request = bmodbus_client_get_request(&modbus1);
@@ -267,7 +266,7 @@ void test_master_write_register(void){
     TEST_ASSERT_EQUAL(8, sending_request->size);
     for(i=0;i<sending_request->size;i++){
         bmodbus_client_next_byte(&modbus_client, fake_time, sending_request->data[i]);
-        fake_time += byte_timing_microseconds(38400) * 1; // 1 byte
+        fake_time += BYTE_TIMING_IN_MICROSECONDS(38400) * 1; // 1 byte
     }
     response = bmodbus_client_get_request(&modbus_client);
     TEST_ASSERT_NOT_EQUAL(NULL, response);
@@ -292,7 +291,7 @@ void test_master_write_registers(void){
     TEST_ASSERT_EQUAL(9 + sizeof(data), sending_request->size);
     for(i=0;i<sending_request->size;i++){
         bmodbus_client_next_byte(&modbus_client, fake_time, sending_request->data[i]);
-        fake_time += byte_timing_microseconds(38400) * 1; // 1 byte
+        fake_time += BYTE_TIMING_IN_MICROSECONDS(38400) * 1; // 1 byte
     }
     response = bmodbus_client_get_request(&modbus_client);
     TEST_ASSERT_NOT_EQUAL(NULL, response);
