@@ -181,7 +181,9 @@ typedef struct{
 }modbus_master_t;
 
 extern void bmodbus_master_init(modbus_master_t *bmodbus, uint32_t interframe_delay);
+extern void bmodbus_master_send_complete(modbus_master_t * bmodbus, uint32_t microseconds);
 extern void bmodbus_master_next_byte(modbus_master_t *bmodbus, uint32_t microseconds, uint8_t byte);
+extern void bmodbus_master_received(modbus_master_t *bmodbus, uint32_t microseconds, uint8_t * bytes, uint8_t length, uint32_t microseconds_per_byte);
 extern modbus_uart_request_t * bmodbus_master_read_coils(modbus_master_t *bmodbus, uint8_t client_address, uint16_t start_address, uint16_t count);
 extern modbus_uart_request_t * bmodbus_master_read_discrete_inputs(modbus_master_t *bmodbus, uint8_t client_address, uint16_t start_address, uint16_t count);
 extern modbus_uart_request_t * bmodbus_master_read_holding_registers(modbus_master_t *bmodbus, uint8_t client_address, uint16_t start_address, uint16_t count);

@@ -256,7 +256,8 @@ void test_master_write_register(void){
     int i;
     uint32_t fake_time = 0;
     modbus_uart_request_t * sending_request = NULL;
-    modbus_request_t * response = NULL;
+    modbus_request_t * client_request = NULL;
+    modbus_uart_data_t * client_response = NULL;
     modbus_client_t modbus_client;
     modbus_master_t modbus_master;
     bmodbus_client_init(&modbus_client, INTERFRAME_DELAY_MICROSECONDS(38400), 2);
@@ -268,12 +269,21 @@ void test_master_write_register(void){
         bmodbus_client_next_byte(&modbus_client, fake_time, sending_request->data[i]);
         fake_time += BYTE_TIMING_IN_MICROSECONDS(38400) * 1; // 1 byte
     }
-    response = bmodbus_client_get_request(&modbus_client);
-    TEST_ASSERT_NOT_EQUAL(NULL, response);
-    TEST_ASSERT_EQUAL(response->function, 0x06);
-    TEST_ASSERT_EQUAL(response->size, 1);
-    TEST_ASSERT_EQUAL(response->data[0], 0xdead);
-    TEST_ASSERT_EQUAL(response->address, 0x0708);
+    client_request = bmodbus_client_get_request(&modbus_client);
+    TEST_ASSERT_NOT_EQUAL(NULL, client_request);
+    TEST_ASSERT_EQUAL(client_request->function, 0x06);
+    TEST_ASSERT_EQUAL(client_request->size, 1);
+    TEST_ASSERT_EQUAL(client_request->data[0], 0xdead);
+    TEST_ASSERT_EQUAL(client_request->address, 0x0708);
+    fake_time += BYTE_TIMING_IN_MICROSECONDS(38400);
+    bmodbus_master_send_complete(&modbus_master, fake_time);
+    TEST_ASSERT_EQUAL(MASTER_STATE_WAITING_FOR_RESPONSE, modbus_master.state);
+    client_response = bmodbus_client_get_response(&modbus_client);
+    TEST_ASSERT_NOT_EQUAL(NULL, client_response);
+    //Send the response back to the master
+    fake_time += BYTE_TIMING_IN_MICROSECONDS(38400) * 100; // just wait a bit
+    bmodbus_master_received(&modbus_master, fake_time, client_response->data, client_response->size, BYTE_TIMING_IN_MICROSECONDS(38400));
+    TEST_ASSERT_EQUAL(MASTER_STATE_PROCESSING_RESPONSE, modbus_master.state);
 }
 
 void test_master_write_registers(void){

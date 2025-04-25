@@ -40,6 +40,10 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #define MODBUS_FIRST_BYTE(X) ((uint8_t)((X) >> 8))
 #define MODBUS_SECOND_BYTE(X) ((uint8_t)(0xff & X))
 
+#ifndef MODBUS_MASTER_ERROR
+#define MODBUS_MASTER_ERROR(x) {}
+#endif //MODBUS_MASTER_ERROR
+
 #ifndef MODBUS_MEMMOVE
 static void modbus_memmove(void * dst, void * src, uint16_t count) {
     if(dst < src) { //If dest is before source, we can copy forward
@@ -335,13 +339,82 @@ void bmodbus_master_init(modbus_master_t *bmodbus, uint32_t interframe_delay){
     bmodbus->byte_count = 0;
 }
 
-void bmodbus_master_next_byte(modbus_master_t *bmodbus, uint32_t microseconds, uint8_t byte){
+void bmodbus_master_send_complete(modbus_master_t * bmodbus, uint32_t microseconds){
+    //This is called when the response has been sent
+    if(bmodbus->state == MASTER_STATE_SENDING_REQUEST){
+        bmodbus->last_microseconds = microseconds;
+        bmodbus->byte_count = 0;
+        bmodbus->crc.half = 0xFFFF;
+        bmodbus->state = MASTER_STATE_WAITING_FOR_RESPONSE;
+    }
+}
 
+static void master_receive_completed(modbus_master_t *bmodbus){
+    //Here we validate the request and then handle it, it must only be called after a complete message has been received
+    bmodbus->state = MASTER_STATE_PROCESSING_RESPONSE;
+    if(bmodbus->payload.request.data[0] != bmodbus->client_address){
+        MODBUS_MASTER_ERROR(1);
+        return;
+    }
+    if(bmodbus->payload.request.data[1] != bmodbus->function){
+        MODBUS_MASTER_ERROR(2);
+        return;
+    }
+    //Check the crc
+    uint16_t crc = 0xFFFF, expected;
+    for(uint8_t i=0; i<bmodbus->byte_count - 2; i++){
+        crc = crc_update(crc, bmodbus->payload.request.data[i]);
+    }
+    expected = MODBUS_HTONS((bmodbus->payload.request.data[bmodbus->byte_count - 2] << 8) | bmodbus->payload.request.data[bmodbus->byte_count - 1]);
+    if(crc != expected){
+        MODBUS_MASTER_ERROR(3);
+        return;
+    }
+    //Valid message, now parse it into the response
+
+}
+
+void bmodbus_master_next_byte(modbus_master_t *bmodbus, uint32_t microseconds, uint8_t byte){
+    //As we receive bytes, we should populate the buffer OR ignore them based upon the state, and eventually trigger the state change
+    if(bmodbus->state != MASTER_STATE_WAITING_FOR_RESPONSE){
+        return;
+    }
+    if((microseconds - bmodbus->last_microseconds) > bmodbus->interframe_delay){
+        //If the time delta is greater than the interframe delay, we should reset the state machine, and then process from scratch
+        bmodbus->byte_count = 0;
+        bmodbus->crc.half = 0xFFFF;
+    }
+    bmodbus->last_microseconds = microseconds;
+    bmodbus->payload.request.data[bmodbus->byte_count] = byte;
+    bmodbus->byte_count++;
+    if(bmodbus->byte_count >= bmodbus->payload.request.expected_response_size){
+        //Here we can process the request
+        master_receive_completed(bmodbus);
+    }
+}
+
+void bmodbus_master_received(modbus_master_t *bmodbus, uint32_t microseconds, uint8_t * bytes, uint8_t length, uint32_t microseconds_per_byte){
+    //Performs the receiving based upon the data received by repeatedly calling _next_byte
+    uint32_t t;
+    if(length == 0){ //Skip empty requests
+        return;
+    }
+    t = microseconds - (length-1) * microseconds_per_byte;
+    for(uint8_t i=0; i<length; i++){
+        bmodbus_master_next_byte(bmodbus, t, bytes[i]);
+        t += microseconds_per_byte;
+    }
 }
 
 modbus_uart_request_t * modbus_master_send_internal(modbus_master_t *bmodbus, uint8_t client_address, uint8_t function, uint16_t start_address, uint16_t value_or_count, uint16_t * data, uint8_t expected){
     int i;
     uint16_t crc = 0xFFFF;
+    //Check the state prior to sending
+    if(bmodbus->state != MASTER_STATE_IDLE){
+        //Error, we are not idle, fail to send!
+        return NULL;
+    }
+    bmodbus->state = MASTER_STATE_SENDING_REQUEST;
     bmodbus->client_address = client_address;
     bmodbus->register_address = start_address;
     bmodbus->function = function;
@@ -402,8 +475,8 @@ modbus_uart_request_t * modbus_master_send_internal(modbus_master_t *bmodbus, ui
         bmodbus->payload.request.data[6] = crc_bytes.byte[1];
         bmodbus->payload.request.data[7] = crc_bytes.byte[0];
         bmodbus->payload.request.size = 8;
-        bmodbus->payload.request.expected_response_size = expected;
     }
+    bmodbus->payload.request.expected_response_size = expected;
     return &(bmodbus->payload.request);
 }
 
