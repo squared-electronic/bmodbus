@@ -371,7 +371,7 @@ static void master_receive_completed(modbus_master_t *bmodbus){
     for(uint8_t i=0; i<bmodbus->byte_count - 2; i++){
         crc = crc_update(crc, bmodbus->payload.request.data[i]);
     }
-    expected = MODBUS_HTONS((bmodbus->payload.request.data[bmodbus->byte_count - 2] << 8) | bmodbus->payload.request.data[bmodbus->byte_count - 1]);
+    expected = (bmodbus->payload.request.data[bmodbus->byte_count - 1] << 8) | bmodbus->payload.request.data[bmodbus->byte_count - 2];
     if(crc != expected){
         MODBUS_MASTER_ERROR(3);
         bmodbus->state = MASTER_STATE_IDLE;
