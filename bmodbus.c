@@ -354,10 +354,12 @@ static void master_receive_completed(modbus_master_t *bmodbus){
     bmodbus->state = MASTER_STATE_PROCESSING_RESPONSE;
     if(bmodbus->payload.request.data[0] != bmodbus->client_address){
         MODBUS_MASTER_ERROR(1);
+        bmodbus->state = MASTER_STATE_IDLE;
         return;
     }
     if(bmodbus->payload.request.data[1] != bmodbus->function){
         MODBUS_MASTER_ERROR(2);
+        bmodbus->state = MASTER_STATE_IDLE;
         return;
     }
     //Check the crc
@@ -368,10 +370,48 @@ static void master_receive_completed(modbus_master_t *bmodbus){
     expected = MODBUS_HTONS((bmodbus->payload.request.data[bmodbus->byte_count - 2] << 8) | bmodbus->payload.request.data[bmodbus->byte_count - 1]);
     if(crc != expected){
         MODBUS_MASTER_ERROR(3);
+        bmodbus->state = MASTER_STATE_IDLE;
         return;
     }
     //Valid message, now parse it into the response
+    switch (bmodbus->function) {
+        case 5: //Write single coil
+        case 6: //Write single register
+        case 15: //Write multiple coils
+        case 16: //Write multiple registers
+            bmodbus->payload.response.size = 0;
+            bmodbus->payload.response.result = 0; //Success
+            break;
+        case 1: //Read coils
+        case 2: //Read discrete inputs
+        case 3: //Read holding registers
+        case 4: //Read input registers
+            if (bmodbus->byte_count - 5 != bmodbus->payload.request.data[2]) {
+                MODBUS_MASTER_ERROR(4);
+                bmodbus->state = MASTER_STATE_IDLE;
+                return;
+            }
+            MODBUS_MEMMOVE((uint8_t *) (bmodbus->payload.response.data), bmodbus->payload.request.data + 3,
+                           bmodbus->byte_count - 5);
+            bmodbus->payload.response.result = 0;
+            bmodbus->payload.response.size = bmodbus->byte_count - 5;
+            //These operate on word by word, so we need to convert the endianness
+            if ((bmodbus->function == 3) || (bmodbus->function == 4)) {
+                bmodbus->payload.response.size = bmodbus->payload.response.size / 2; //Number of words
+                for (uint8_t i = 0; i < bmodbus->payload.response.size; i++) {
+                    bmodbus->payload.response.data[i] = MODBUS_HTONS(bmodbus->payload.response.data[i]);
+                }
+            }
 
+            break;
+        default:
+            MODBUS_MASTER_ERROR(5);
+            bmodbus->state = MASTER_STATE_IDLE;
+            return;
+    }
+    bmodbus->payload.response.function = bmodbus->function;
+    bmodbus->payload.response.address = bmodbus->register_address;
+    bmodbus->state = MASTER_STATE_RESPONSE_READY;
 }
 
 void bmodbus_master_next_byte(modbus_master_t *bmodbus, uint32_t microseconds, uint8_t byte){
@@ -503,4 +543,11 @@ modbus_uart_request_t * bmodbus_master_write_multiple_coils(modbus_master_t *bmo
 }
 modbus_uart_request_t * bmodbus_master_write_multiple_registers(modbus_master_t *bmodbus, uint8_t client_address, uint16_t address, uint16_t count, uint16_t *data){
     return modbus_master_send_internal(bmodbus, client_address, 16, address, count, data, 8);
+}
+
+modbus_request_t * bmodbus_master_get_response(modbus_master_t *bmodbus){
+    if(bmodbus->state == MASTER_STATE_RESPONSE_READY){
+        return &(bmodbus->payload.response);
+    }
+    return NULL;
 }

@@ -156,7 +156,7 @@ extern void bmodbus_client_deinit(modbus_client_t *bmodbus);
 
 
 typedef enum{
-    MASTER_NO_INIT=0, MASTER_STATE_IDLE, MASTER_STATE_SENDING_REQUEST, MASTER_STATE_WAITING_FOR_RESPONSE, MASTER_STATE_PROCESSING_RESPONSE
+    MASTER_NO_INIT=0, MASTER_STATE_IDLE, MASTER_STATE_SENDING_REQUEST, MASTER_STATE_WAITING_FOR_RESPONSE, MASTER_STATE_PROCESSING_RESPONSE, MASTER_STATE_RESPONSE_READY
 }modbus_master_state_t;
 
 typedef struct{
@@ -184,6 +184,7 @@ extern void bmodbus_master_init(modbus_master_t *bmodbus, uint32_t interframe_de
 extern void bmodbus_master_send_complete(modbus_master_t * bmodbus, uint32_t microseconds);
 extern void bmodbus_master_next_byte(modbus_master_t *bmodbus, uint32_t microseconds, uint8_t byte);
 extern void bmodbus_master_received(modbus_master_t *bmodbus, uint32_t microseconds, uint8_t * bytes, uint8_t length, uint32_t microseconds_per_byte);
+extern modbus_request_t * bmodbus_master_get_response(modbus_master_t *bmodbus);
 extern modbus_uart_request_t * bmodbus_master_read_coils(modbus_master_t *bmodbus, uint8_t client_address, uint16_t start_address, uint16_t count);
 extern modbus_uart_request_t * bmodbus_master_read_discrete_inputs(modbus_master_t *bmodbus, uint8_t client_address, uint16_t start_address, uint16_t count);
 extern modbus_uart_request_t * bmodbus_master_read_holding_registers(modbus_master_t *bmodbus, uint8_t client_address, uint16_t start_address, uint16_t count);

@@ -283,7 +283,13 @@ void test_master_write_register(void){
     //Send the response back to the master
     fake_time += BYTE_TIMING_IN_MICROSECONDS(38400) * 100; // just wait a bit
     bmodbus_master_received(&modbus_master, fake_time, client_response->data, client_response->size, BYTE_TIMING_IN_MICROSECONDS(38400));
-    TEST_ASSERT_EQUAL(MASTER_STATE_PROCESSING_RESPONSE, modbus_master.state);
+    TEST_ASSERT_EQUAL(MASTER_STATE_RESPONSE_READY, modbus_master.state);
+    //Check the response
+    modbus_request_t * response = bmodbus_master_get_response(&modbus_master);
+    TEST_ASSERT_NOT_EQUAL(NULL, response);
+    TEST_ASSERT_EQUAL(0, response->result);
+    TEST_ASSERT_EQUAL(0x06, response->function);
+    TEST_ASSERT_EQUAL(0x0708, response->address);
 }
 
 void test_master_write_registers(void){
@@ -304,12 +310,29 @@ void test_master_write_registers(void){
         fake_time += BYTE_TIMING_IN_MICROSECONDS(38400) * 1; // 1 byte
     }
     response = bmodbus_client_get_request(&modbus_client);
+    //Here we check the client request
     TEST_ASSERT_NOT_EQUAL(NULL, response);
     TEST_ASSERT_EQUAL(response->function, 0x10);
     TEST_ASSERT_EQUAL(response->address, 0x0708);
     TEST_ASSERT_EQUAL(response->data[0], 0xdead);
     TEST_ASSERT_EQUAL(response->data[1], 0xbeef);
     TEST_ASSERT_EQUAL(response->size, 2);
+    response->result = 0;
+    fake_time += BYTE_TIMING_IN_MICROSECONDS(38400);
+    bmodbus_master_send_complete(&modbus_master, fake_time);
+    TEST_ASSERT_EQUAL(MASTER_STATE_WAITING_FOR_RESPONSE, modbus_master.state);
+    //Send the response back to the master
+    modbus_uart_data_t * client_response = bmodbus_client_get_response(&modbus_client);
+    TEST_ASSERT_NOT_EQUAL(NULL, client_response);
+    fake_time += BYTE_TIMING_IN_MICROSECONDS(38400) * 100; // just wait a bit
+    bmodbus_master_received(&modbus_master, fake_time, client_response->data, client_response->size, BYTE_TIMING_IN_MICROSECONDS(38400));
+    TEST_ASSERT_EQUAL(MASTER_STATE_RESPONSE_READY, modbus_master.state);
+    //Check the response
+    modbus_request_t * master_response = bmodbus_master_get_response(&modbus_master);
+    TEST_ASSERT_NOT_EQUAL(NULL, master_response);
+    TEST_ASSERT_EQUAL(0, master_response->result);
+    TEST_ASSERT_EQUAL(0x10, master_response->function);
+    TEST_ASSERT_EQUAL(0x0708, master_response->address);
 }
 
 int main(void) {
