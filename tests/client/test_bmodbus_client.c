@@ -545,6 +545,8 @@ void test_master_read_input_registers(void){
 
 void test_master_write_single_coil(void){
     uint32_t fake_time = 0;
+    uint8_t original_command_buffer[256];
+    uint32_t original_command_length = 0;
     modbus_uart_request_t * sending_request = NULL;
     modbus_request_t * client_request = NULL;
     modbus_uart_data_t * client_response = NULL;
@@ -555,6 +557,8 @@ void test_master_write_single_coil(void){
     sending_request = bmodbus_master_write_single_coil(&modbus_master, 2, 0x1234, 1);
     TEST_ASSERT_NOT_EQUAL(NULL, sending_request);
     TEST_ASSERT_EQUAL(8, sending_request->size);
+    memcpy(original_command_buffer, sending_request->data, sending_request->size);
+    original_command_length = sending_request->size;
     for(int i=0;i<sending_request->size;i++){
         client_request = bmodbus_client_get_request(&modbus_client);
         TEST_ASSERT_EQUAL(NULL, client_request);
@@ -576,6 +580,10 @@ void test_master_write_single_coil(void){
 
     client_response = bmodbus_client_get_response(&modbus_client);
     TEST_ASSERT_NOT_EQUAL(NULL, client_response);
+
+    //Validated the client response
+    TEST_ASSERT_EQUAL(client_response->size, original_command_length);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(original_command_buffer, client_response->data, client_response->size);
 
     //Send the response back to the master
     fake_time += BYTE_TIMING_IN_MICROSECONDS(38400) * 100; // just wait a bit
