@@ -181,6 +181,8 @@ void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microseconds, u
                 bmodbus->payload.request.address = bmodbus->header.word[0];
                 //Here we prep the request struct for higher layers
                 switch (bmodbus->function) {
+                    case 5:
+                        bmodbus->header.word[1] = bmodbus->header.word[1]?1:0;
                     case 6:
                         bmodbus->payload.request.size = 1;
                         bmodbus->payload.request.data[0] = bmodbus->header.word[1];
@@ -227,7 +229,21 @@ static void bmodbus_encode_client_response(modbus_client_t *bmodbus){
     int i;
     //This takes the request and encodes it into the response (assuming processing is completed)
     switch (bmodbus->function){
+        case 5:
         case 6:
+            //If failed return no response
+            if(bmodbus->payload.request.result){
+                bmodbus->payload.response.size = 0;
+                break;
+            }
+            temp1 = bmodbus->payload.request.data[0];
+            temp2 = bmodbus->payload.request.address;
+            bmodbus->payload.response.size = 6;
+            bmodbus->payload.response.data[2] = (temp2 & 0xFF00) >> 8;
+            bmodbus->payload.response.data[3] = temp2 & 0xFF;
+            bmodbus->payload.response.data[4] = (temp1 & 0xFF00) >> 8;
+            bmodbus->payload.response.data[5] = temp1 & 0xFF;
+            break;
         case 16:
             //If failed return no response
             if(bmodbus->payload.request.result){
@@ -380,6 +396,9 @@ static void master_receive_completed(modbus_master_t *bmodbus){
     //Valid message, now parse it into the response
     switch (bmodbus->function) {
         case 5: //Write single coil
+            bmodbus->payload.response.size=1;
+            bmodbus->payload.response.data[0] = (bmodbus->payload.request.data[2]?1 : 0);
+            break;
         case 6: //Write single register
         case 15: //Write multiple coils
         case 16: //Write multiple registers
@@ -509,6 +528,13 @@ modbus_uart_request_t * modbus_master_send_internal(modbus_master_t *bmodbus, ui
     }else{
         bmodbus->payload.request.data[2] = MODBUS_FIRST_BYTE(start_address);
         bmodbus->payload.request.data[3] = MODBUS_SECOND_BYTE(start_address);
+        if(function == 5){
+            if(value_or_count){
+                value_or_count = 0xFF00;
+            }else{
+                value_or_count = 0x0000;
+            }
+        }
         bmodbus->payload.request.data[4] = MODBUS_FIRST_BYTE(value_or_count);
         bmodbus->payload.request.data[5] = MODBUS_SECOND_BYTE(value_or_count);
         for(i=0;i<4;i++){
