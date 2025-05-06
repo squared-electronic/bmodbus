@@ -183,6 +183,9 @@ void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microseconds, u
                 switch (bmodbus->function) {
                     case 5:
                         bmodbus->header.word[1] = bmodbus->header.word[1]?1:0;
+                        bmodbus->payload.request.size = 1;
+                        bmodbus->payload.request.data[0] = bmodbus->header.word[1];
+                        break;
                     case 6:
                         bmodbus->payload.request.size = 1;
                         bmodbus->payload.request.data[0] = bmodbus->header.word[1];
@@ -230,7 +233,6 @@ static void bmodbus_encode_client_response(modbus_client_t *bmodbus){
     //This takes the request and encodes it into the response (assuming processing is completed)
     switch (bmodbus->function){
         case 5:
-
         case 6:
             //If failed return no response
             if(bmodbus->payload.request.result){
