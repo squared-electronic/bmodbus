@@ -230,11 +230,15 @@ static void bmodbus_encode_client_response(modbus_client_t *bmodbus){
     //This takes the request and encodes it into the response (assuming processing is completed)
     switch (bmodbus->function){
         case 5:
+
         case 6:
             //If failed return no response
             if(bmodbus->payload.request.result){
                 bmodbus->payload.response.size = 0;
                 break;
+            }
+            if(bmodbus->function == 5) {
+                bmodbus->payload.request.data[0] = bmodbus->payload.request.data[0] ? 0xff00 : 0x0000;
             }
             temp1 = bmodbus->payload.request.data[0];
             temp2 = bmodbus->payload.request.address;

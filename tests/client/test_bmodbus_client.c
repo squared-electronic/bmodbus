@@ -252,6 +252,34 @@ void test_write_coils(void){
     TEST_ASSERT_EQUAL(0xd0, response->data[5]);
 }
 
+void test_write_coil(void){
+
+    uint8_t writing_coil_address_0x1234_at_slave_2[] = {0x07, 0x05, 0x12, 0x34, 0xff, 0x00, 0xc8, 0xea, };
+    modbus_request_t * request = NULL;
+    modbus_uart_data_t * response = NULL;
+    modbus_client_t modbus1;
+    bmodbus_client_init(&modbus1, INTERFRAME_DELAY_MICROSECONDS(38400), 7);
+    uint32_t fake_time = 0;
+    fake_time += BYTE_TIMING_IN_MICROSECONDS(38400) * 1; // 1 byte
+    for(uint16_t i=0;i<sizeof(writing_coil_address_0x1234_at_slave_2);i++) {
+        //Ensure we are not giving a response
+        TEST_ASSERT_EQUAL(NULL, bmodbus_client_get_request(&modbus1));
+        bmodbus_client_next_byte(&modbus1, fake_time, writing_coil_address_0x1234_at_slave_2[i]);
+        fake_time += BYTE_TIMING_IN_MICROSECONDS(38400) * 1; // 1 byte
+    }
+    request = bmodbus_client_get_request(&modbus1);
+    TEST_ASSERT_NOT_EQUAL(NULL, request);
+    TEST_ASSERT_EQUAL(CLIENT_STATE_PROCESSING_REQUEST, modbus1.state);
+    TEST_ASSERT_EQUAL(0x05, request->function);
+    TEST_ASSERT_EQUAL(0x1234, request->address);
+    TEST_ASSERT_EQUAL(1, request->data[0]);
+
+    response = bmodbus_client_get_response(&modbus1);
+    TEST_ASSERT_NOT_EQUAL(NULL, response); //Ensure the uart response is ready
+    TEST_ASSERT_EQUAL(8, response->size);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(writing_coil_address_0x1234_at_slave_2, response->data, 8);
+}
+
 void test_master_write_register(void){
     int i;
     uint32_t fake_time = 0;
@@ -573,6 +601,7 @@ int main(void) {
     RUN_TEST(test_read_input_status);
     RUN_TEST(test_read_coil);
     RUN_TEST(test_write_coils);
+    RUN_TEST(test_write_coil);
     RUN_TEST(test_master_write_register);
     RUN_TEST(test_master_write_registers);
     RUN_TEST(test_master_read_coils);
