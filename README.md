@@ -4,8 +4,12 @@ This is a straightforward modbus RTU implementation in C designed for embedded s
 
 It's very lightweight in terms of RAM, Flash and processing. Stop worrying about modbus implementations and focus on your application.
 
-## Modbus Functionality Supported
+## Testing Status
+![Unit Tests Little Endian](https://github.com/ThingDone/bmodbus/actions/workflows/cmake-big-endian-tests.yml/badge.svg)
+![Unit Tests Big Endian](https://github.com/ThingDone/bmodbus/actions/workflows/cmake-single-platform.yml/badge.svg)
 
+## Modbus Functionality Supported
+This implements both a modbus master and a modbus client (slave) implementation. You can have multiple instances of each type.
 We support the following functions:
 * Read Coils (0x01)
 * Read Discrete Inputs (0x02)
@@ -17,6 +21,9 @@ We support the following functions:
 * Write Multiple Registers (0x10)
 
 Future stuff:
+* Documentation
+* More Examples
+* Live Testing on Physical boards
 * Read/Write Multiple Registers (0x17)
 * Mask Write Register (0x16)
 * Read FIFO Queue (0x18)
@@ -24,7 +31,7 @@ Future stuff:
 * Ascii support
 * Intermessage 3.5 char timeout (or 1.75ms when > 19200bps)
 * interbyte timeout of 1.5 char times (so if it's >1.5 x char time between bytes discard the message)
-* A modbus master implementation
+* Custom opcode support (it's not hard to add your own, but there isn't a standard way to do it yet)
 
 # Usage
 There are three main ways to use this library, and they all share some common elements.
@@ -140,6 +147,4 @@ They can focus on their application and not the modbus implementation.
 I've made unit tests to cover the functionality.
 
 # Test plan
-Unsure how best to automate these tests, but I'm hoping to rely heavily on testing via github actions.
-
-To test unit tests in a big endian environment, I can use https://github.com/uraimo/run-on-arch-action to run an s390x linux image.
+We currently run our units tests on big endian and little endian systems. In the future we'll run them on processors (or simulators).
