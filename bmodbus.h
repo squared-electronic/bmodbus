@@ -4,6 +4,22 @@
  * @date 18 Mar 2025
  * @brief File containing definition of api.
  *
+ * @mainpage bModbus API definition
+ *
+ * Welcome to a comprehensive API definition for the bModbus library. This library is designed to provide a simple and efficient way to implement Modbus communication in embedded systems.
+ *
+ * It includes both master and client functionality, allowing you to easily send and receive Modbus requests and responses. It supports multiple instances and several Modbus function codes.
+ *
+ * # Master Interface
+ * @ref master_api
+ *
+ * # Client (Slave) Interface
+ * @ref client_api
+ *
+ *
+ *  \defgroup client_api Modbus Client API
+ *  \brief API for using BModbus Clients
+ *  @{
  */
 
 /* MIT Style License
@@ -94,7 +110,7 @@ typedef struct{
 
 /**
  * @brief Initialize the modbus client
- *
+  *
  * This initializes the modbus client. It must be called before any other modbus functions.
  * @param bmodbus - the modbus client instance to initialize
  * @param client_address - the address of the client 1->254
@@ -104,6 +120,7 @@ typedef struct{
  * @example
  *    modbus_client_t modbus1;
  *    bmodbus_client_init(&modbus1, INTERFRAME_DELAY_MICROSECONDS(38400), client_address);
+ * \addtogroup client_api
  */
 extern void bmodbus_client_init(modbus_client_t *bmodbus, uint32_t interframe_delay, uint8_t client_address);
 /**
@@ -154,7 +171,13 @@ extern void bmodbus_client_send_complete(modbus_client_t * bmodbus);
  */
 extern void bmodbus_client_deinit(modbus_client_t *bmodbus);
 
+/**
+ * @}
+ * \defgroup master_api Modbus Master API
+ * \brief API for using BModbus Masters
+ * @{
 
+ */
 typedef enum{
     MASTER_NO_INIT=0, MASTER_STATE_IDLE, MASTER_STATE_SENDING_REQUEST, MASTER_STATE_WAITING_FOR_RESPONSE, MASTER_STATE_PROCESSING_RESPONSE, MASTER_STATE_RESPONSE_READY
 }modbus_master_state_t;
@@ -180,18 +203,137 @@ typedef struct{
     }payload;
 }modbus_master_t;
 
+
+/**
+ *
+ * @brief Initialize the modbus master
+ *
+ * @param bmodbus - the modbus master instance to initialize, this should be a pointer to a modbus_master_t.
+ * @param interframe_delay - the time in microseconds between bytes. This can be generated from the baudrate INTERFRAME_DELAY_MICROSECONDS(38400)
+ * @return none
+ *
+ */
 extern void bmodbus_master_init(modbus_master_t *bmodbus, uint32_t interframe_delay);
+/**
+ *
+ * @brief notify the modbus master that the request has completely sent
+ *
+ * @param bmodbus - pointer to the modbus master instance
+ *
+ */
 extern void bmodbus_master_send_complete(modbus_master_t * bmodbus, uint32_t microseconds);
+/**
+ * @brief notify the modbus master that a byte has been received
+ *
+ * @param bmodbus - pointer to the modbus master instance
+ * @param microseconds - the time the last byte was received in microseconds
+ * @param byte - the byte received
+  *
+ * @note: If bmodbus_master_received is used, this function does not need to be called.
+ * This function should be called for each byte received from the modbus master.
+ * It can be called from an interrupt, or the bytes can be sent via a task.
+ *
+ */
 extern void bmodbus_master_next_byte(modbus_master_t *bmodbus, uint32_t microseconds, uint8_t byte);
+/**
+ * @brief notify the modbus master that one or more bytes have been received
+ *
+ * @param bmodbus - pointer to the modbus master instance
+ * @param microseconds - the time the last byte was received in microseconds
+ * @param bytes - pointer to the bytes received
+ * @param length - the number of bytes received
+ * @param microseconds_per_byte - the time in microseconds - as calculated by BYTE_TIMING_IN_MICROSECONDS(baudrate)
+  *
+ * @note: bmodbus_master_next_byte is actually called from inside of this routine, so it can be
+ * used as a helper function.
+ *
+ */
 extern void bmodbus_master_received(modbus_master_t *bmodbus, uint32_t microseconds, uint8_t * bytes, uint8_t length, uint32_t microseconds_per_byte);
+/**
+ * @brief Get the next modbus request if there's one pending
+ *
+ * @param bmodbus - pointer to the modbus master instance
+ * @return a pointer to the request, or NULL if there's no request
+ *
+ * This is designed to be called repeatedly until a request is returned. It will return NULL if there's no request.
+ * It has very low overhead and can be called as quickly as desired. It a delay occurs prior to calling it, it will just increase the response time.
+ *
+ * @note This function is typically called from the main loop to return a request to the application. The application should call modbus_finish_request() when it's done with the request.
+ */
 extern modbus_request_t * bmodbus_master_get_response(modbus_master_t *bmodbus);
+/**
+ * @brief Build a modbus master read coils request
+ * @param bmodbus - pointer to modbus master instance
+ * @param client_address - the address of the client 1->254
+ * @param start_address - the starting address of the coils to read
+ * @param count - the number of coils to read
+ * @return a pointer to the request, or NULL if there's no request
+ */
 extern modbus_uart_request_t * bmodbus_master_read_coils(modbus_master_t *bmodbus, uint8_t client_address, uint16_t start_address, uint16_t count);
+/**
+ * @brief Build a modbus master read discrete inputs request
+ * @param bmodbus - pointer to modbus master instance
+ * @param client_address - the address of the client 1->254
+ * @param start_address - the starting address of the discrete inputs to read 0->65535
+ * @param count - the number of discrete inputs to read
+ * @return a pointer to the request, or NULL if there's no request
+ */
 extern modbus_uart_request_t * bmodbus_master_read_discrete_inputs(modbus_master_t *bmodbus, uint8_t client_address, uint16_t start_address, uint16_t count);
+/**
+ * @brief Build a modbus master read holding registers request
+ * @param bmodbus - pointer to modbus master instance
+ * @param client_address - the address of the client 1->254
+ * @param start_address - the starting address of the holding registers to read 0->65535
+ * @param count - the number of holding registers to read
+ * @return a pointer to the request, or NULL if there's no request
+ */
 extern modbus_uart_request_t * bmodbus_master_read_holding_registers(modbus_master_t *bmodbus, uint8_t client_address, uint16_t start_address, uint16_t count);
+/**
+ * @brief Build a modbus master read input registers request
+ * @param bmodbus - pointer to modbus master instance
+ * @param client_address - the address of the client 1->254
+ * @param start_address - the starting address of the input registers to read 0->65535
+ * @param count - the number of input registers to read
+ * @return a pointer to the request, or NULL if there's no request
+ */
 extern modbus_uart_request_t * bmodbus_master_read_input_registers(modbus_master_t *bmodbus, uint8_t client_address, uint16_t start_address, uint16_t count);
+/**
+ * @brief Build a modbus master write single coil request
+ * @param bmodbus - pointer to modbus master instance
+ * @param client_address - the address of the client 1->254
+ * @param address - the address of the coil to write 0->65535
+ * @param value - the value to write 0xFF00 or 0x0000
+ * @return a pointer to the request, or NULL if there's no request
+ */
 extern modbus_uart_request_t * bmodbus_master_write_single_coil(modbus_master_t *bmodbus, uint8_t client_address, uint16_t address, uint16_t value);
+/**
+ * @brief Build a modbus master write single register request
+ * @param bmodbus - pointer to modbus master instance
+ * @param client_address - the address of the client 1->254
+ * @param address - the address of the register to write 0->65535
+ * @param value - the value to write 0->65535
+ * @return a pointer to the request, or NULL if there's no request
+ */
 extern modbus_uart_request_t * bmodbus_master_write_single_register(modbus_master_t *bmodbus, uint8_t client_address, uint16_t address, uint16_t value);
+/**
+ * @brief Build a modbus master write multiple coils request
+ * @param bmodbus - pointer to modbus master instance
+ * @param client_address - the address of the client 1->254
+ * @param address - the starting address of the coils to write 0->65535
+ * @param count - the number of coils to write
+ * @param data - pointer to the data to write
+ * @return a pointer to the request, or NULL if there's no request
+ */
 extern modbus_uart_request_t * bmodbus_master_write_multiple_coils(modbus_master_t *bmodbus, uint8_t client_address, uint16_t address, uint16_t count, uint8_t *data);
+/**
+ * @brief Build a modbus master write multiple registers request
+ * @param bmodbus - pointer to modbus master instance
+ * @param client_address - the address of the client 1->254
+ * @param address - the starting address of the registers to write 0->65535
+ * @param count - the number of registers to write
+ * @param data - pointer to the data to write
+ * @return a pointer to the request, or NULL if there's no request
+ */
 extern modbus_uart_request_t * bmodbus_master_write_multiple_registers(modbus_master_t *bmodbus, uint8_t client_address, uint16_t address, uint16_t count, uint16_t *data);
 
 //Utility for calculating the minimum interfame delay -- which is the time from receiving the last byte of the request to sending the first byte of the response
@@ -201,6 +343,9 @@ extern modbus_uart_request_t * bmodbus_master_write_multiple_registers(modbus_ma
 //Utility for calculating the byte timing -- which is used when buffers are transfered.
 #define BYTE_TIMING_IN_MICROSECONDS(BAUDRATE) (1000000 / ((BAUDRATE)/10))
 
+/**
+ * @}
+ */
 #ifdef __cplusplus
 }
 #endif
