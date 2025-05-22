@@ -16,11 +16,21 @@ function(arduino_project_add PROJECT_NAME SKETCH_DIR BOARD_FQBN)
     # PROJECT_NAME: A unique name for this Arduino project (e.g., "my_esp32_sensor", "uno_blinky")
     # SKETCH_DIR: The absolute path to the Arduino sketch folder (e.g., "${CMAKE_CURRENT_SOURCE_DIR}/sketches/my_blinky")
     # BOARD_FQBN: The Fully Qualified Board Name (e.g., "arduino:avr:uno", "esp32:esp32:esp32")
-    # OUTPUT_FILE_NAME: The name and full path of the output file (e.g., "build/arduino.avr.uno/arduino_client_example.ino.hex")
+
+    # optional argument
+    # ARDUINO_DEPENDENCIES dependencies for the project
+    cmake_parse_arguments(
+            ARDUINO
+            ""          # Optional boolean flags: AP_VERBOSE, AP_NO_UPLOAD
+            ""                       # One-value keywords: AP_PORT
+            "DEPENDENCIES"               # Multi-value keywords: ARDUINO_DEPENDENCIES
+            ${ARGN}                      # Pass all remaining arguments from the function call
+    )
 
     # Define build target
     ###--build-path "${DEFAULT_BUILD_PATH}"
     # set(TEMP_TARGET_NAME ${OUTPUT_FILE_NAME})
+    # message(WARNING "ARDUINO_DEPENDENCIES: ${ARDUINO_DEPENDENCIES}")
     set(TEMP_TARGET_NAME "build/${BOARD_FQBN}/${PROJECT_NAME}.hex")
     string(REPLACE "/" "." TEMP_TARGET_NAME ${TEMP_TARGET_NAME})
     string(REPLACE ":" "." TEMP_TARGET_NAME ${TEMP_TARGET_NAME})
@@ -28,9 +38,11 @@ function(arduino_project_add PROJECT_NAME SKETCH_DIR BOARD_FQBN)
             ${TEMP_TARGET_NAME} ALL
             COMMAND ${ARDUINO_CLI_EXECUTABLE} compile
             --fqbn "${BOARD_FQBN}"
+            --build-property "compiler.cpp.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write"
             "${SKETCH_DIR}"
             BYPRODUCTS ${OUTPUT_FILE_NAME}
             COMMENT "Building Arduino project '${PROJECT_NAME}' for board '${BOARD_FQBN}'"
+            DEPENDS ${ARDUINO_DEPENDENCIES}
             VERBATIM
     )
 
