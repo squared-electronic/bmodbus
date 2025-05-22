@@ -1,6 +1,8 @@
 //
 // Created by billm on 3/24/2025.
 //
+#ifndef TEST_BMODBUS_CLIENT_AS_INCLUDE
+#define TEST_BMODBUS_CLIENT_AS_INCLUDE
 
 #include <stdint.h>
 #include <stdio.h>
@@ -599,10 +601,14 @@ void test_master_write_single_coil(void){
     TEST_ASSERT_EQUAL(1, response->data[0]);
 }
 
+#ifndef FAKE_MAIN
 int main(void) {
+#else
+int unit_test_main(void){
+#endif
     UNITY_BEGIN();
     // Run test cases
-    RUN_TEST(test_client_simple_write, 10);
+    RUN_TEST(test_client_simple_write);
     RUN_TEST(test_client_single_write);
     RUN_TEST(test_client_holding_read);
     RUN_TEST(test_client_input_read);
@@ -619,3 +625,5 @@ int main(void) {
     RUN_TEST(test_master_write_single_coil);
     return UNITY_END();
 }
+
+#endif //TEST_BMODBUS_CLIENT_AS_INCLUDE
