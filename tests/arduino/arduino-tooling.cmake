@@ -38,7 +38,9 @@ function(arduino_project_add PROJECT_NAME SKETCH_DIR BOARD_FQBN)
             ${TEMP_TARGET_NAME} ALL
             COMMAND ${ARDUINO_CLI_EXECUTABLE} compile
             --fqbn "${BOARD_FQBN}"
+            --build-property "compiler.c.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write"
             --build-property "compiler.cpp.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write"
+            --export-binaries
             "${SKETCH_DIR}"
             BYPRODUCTS ${OUTPUT_FILE_NAME}
             COMMENT "Building Arduino project '${PROJECT_NAME}' for board '${BOARD_FQBN}'"
