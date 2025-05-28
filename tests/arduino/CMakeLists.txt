@@ -25,6 +25,8 @@ include(arduino-tooling.cmake)
 #add_custom_command(
 #        TARGET
 #)
+
+# unit tests
 file(COPY_FILE ../client/test_bmodbus_client.c arduino_unit_tests/test_bmodbus_client.h ONLY_IF_DIFFERENT)
 file(COPY_FILE ../unity/unity.c arduino_unit_tests/unity.c ONLY_IF_DIFFERENT)
 file(COPY_FILE ../unity/unity.h arduino_unit_tests/unity.h ONLY_IF_DIFFERENT)
@@ -43,4 +45,14 @@ arduino_project_add(
         "${CMAKE_CURRENT_SOURCE_DIR}/arduino_unit_tests"
         "esp32:esp32:esp32"
         DEPENDENCIES "arduino_unit_tests/test_bmodbus_client.h" "arduino_unit_tests/unity.c" "arduino_unit_tests/unity.h" "arduino_unit_tests/unity_internals.h" "arduino_unit_tests/bmodbus.c" "arduino_unit_tests/bmodbus.h"
+)
+
+# arduino_client_example
+file(COPY_FILE ../../bmodbus.c arduino_client_example/bmodbus.c ONLY_IF_DIFFERENT)
+file(COPY_FILE ../../bmodbus.h arduino_client_example/bmodbus.h ONLY_IF_DIFFERENT)
+arduino_project_add(
+        arduino_client_example
+        "${CMAKE_CURRENT_SOURCE_DIR}/arduino_client_example"
+        "adafruit:samd:adafruit_feather_m4"
+        DEPENDENCIES "arduino_client_example/bmodbus.c" "arduino_client_example/bmodbus.h" "arduino_client_example/arduino_client_example.ino"
 )
