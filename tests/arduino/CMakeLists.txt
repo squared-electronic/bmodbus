@@ -37,3 +37,10 @@ arduino_project_add(
         "adafruit:samd:adafruit_feather_m4"
         DEPENDENCIES "arduino_unit_tests/test_bmodbus_client.h" "arduino_unit_tests/unity.c" "arduino_unit_tests/unity.h" "arduino_unit_tests/unity_internals.h" "arduino_unit_tests/bmodbus.c" "arduino_unit_tests/bmodbus.h"
 )
+
+arduino_project_add(
+        arduino_unit_tests
+        "${CMAKE_CURRENT_SOURCE_DIR}/arduino_unit_tests"
+        "esp32:esp32:esp32"
+        DEPENDENCIES "arduino_unit_tests/test_bmodbus_client.h" "arduino_unit_tests/unity.c" "arduino_unit_tests/unity.h" "arduino_unit_tests/unity_internals.h" "arduino_unit_tests/bmodbus.c" "arduino_unit_tests/bmodbus.h"
+)
