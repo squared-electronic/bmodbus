@@ -13,7 +13,7 @@ void setup(){
 }
 
 void loop(){
-    delay(1000);
+    delay(100);
     unit_test_main();
     Serial.println("All tests completed");
 }
