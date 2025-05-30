@@ -33,7 +33,8 @@ jobs:
       - name: Compile Sketch
         run: |
           cd ./tests/arduino
-          ls -l
+          ls -l 
+          ls -l arduino_client_example
           arduino-cli compile --fqbn "adafruit:samd:adafruit_feather_m4" --build-property "compiler.c.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write"  --build-property "compiler.cpp.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write" --export-binaries arduino_client_example
 #          arduino-cli config init
 #          arduino-cli config set board_manager.additional_urls https://adafruit.github.io/arduino-board-index/package_adafruit_index.json
