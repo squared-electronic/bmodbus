@@ -20,8 +20,8 @@ jobs:
             cp ./tests/unity/unity.c ./tests/arduino/arduino_client_example/unity.c
             cp ./tests/unity/unity.h ./tests/arduino/arduino_client_example/unity.h
             cp ./tests/unity/unity_internals.h ./tests/arduino/arduino_client_example/unity_internals.h
-            cp ./bmodbus/bmodbus.h ./tests/arduino/arduino_client_example/bmodbus.h
-            cp ./bmodbus/bmodbus.c ./tests/arduino/arduino_client_example/bmodbus.c
+            cp ./bmodbus.h ./tests/arduino/arduino_client_example/bmodbus.h
+            cp ./bmodbus.c ./tests/arduino/arduino_client_example/bmodbus.c
       - name: Compile Sketch
         uses: arduino/compile-sketches@v1.1.2
         with:
