@@ -22,13 +22,31 @@ jobs:
             cp ./tests/unity/unity_internals.h ./tests/arduino/arduino_client_example/unity_internals.h
             cp ./bmodbus.h ./tests/arduino/arduino_client_example/bmodbus.h
             cp ./bmodbus.c ./tests/arduino/arduino_client_example/bmodbus.c
+      - name: Install Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+      - name: Setting up Arduino CLI libraries
+        run: |
+          cd ./tests/arduino/arduino_client_example
+          arduino-cli config init
+          arduino-cli config set board_manager.additional_urls https://adafruit.github.io/arduino-board-index/package_adafruit_index.json
+          arduino-cli core update-index
+          arduino-cli core install adafruit:samd
+
       - name: Compile Sketch
-        uses: arduino/compile-sketches@v1.1.2
-        with:
-          sketch-paths: |
-            - ./tests/arduino/arduino_client_example
-          fqbn: "adafruit:samd:adafruit_feather_m4"
-          platforms: | 
-            - name "adafruit:samd"
-            - source-url "https://adafruit.github.io/arduino-board-index/package_adafruit_index.json"
-          verbose: 'true'
+        run: |
+          arduino-cli compile --fqbn "adafruit:samd:adafruit_feather_m4" --build-property "compiler.c.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write"  --build-property "compiler.cpp.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write" --export-binaries ./tests/arduino/arduino_client_example
+#          arduino-cli config init
+#          arduino-cli config set board_manager.additional_urls https://adafruit.github.io/arduino-board-index/package_adafruit_index.json
+#          arduino-cli core update-index
+#          arduino-cli core install adafruit:samd
+#          arduino-cli compile --fqbn adafruit:samd:adafruit_feather_m4 ./tests/arduino/arduino_client_example
+#      - name: Compile Sketch
+#        uses: arduino/compile-sketches@v1.1.2
+#        with:
+#          sketch-paths: |
+#            - ./tests/arduino/arduino_client_example
+#          fqbn: "adafruit:samd:adafruit_feather_m4"
+#          platforms: |
+#            - name "adafruit:samd"
+#            - source-url "https://adafruit.github.io/arduino-board-index/package_adafruit_index.json"
+#          verbose: 'true'
