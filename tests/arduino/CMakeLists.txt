@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.16)
+
 #add_executable(arduino_avr arduino_client_example.ino ../bmodbus.c ../bmodbus.h)
 # add_executable(build/arduino.avr.uno/arduino_client_example.ino.hex)
 # arduino-cli compile --fqbn adafruit:samd:adafruit_itsybitsy_m4  --export-binaries .\arduino_client_example.ino
