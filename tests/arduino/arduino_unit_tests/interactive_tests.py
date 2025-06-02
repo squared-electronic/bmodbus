@@ -19,5 +19,6 @@ for i in range(5):
 print("read data", len(data), "bytes")
 # write the data to stdout
 print(data.decode('utf-8'))
+assert("" in data.decode('utf-8'))
 # "All tests completed" is printed in between the different runs of all the tests, so split it and
 #print("done")
