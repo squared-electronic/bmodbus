@@ -1,0 +1,13 @@
+name: ATmega AVR
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+jobs:
+    build_and_test:
+      uses: ./.github/workflows/embedded-build.yml
+      secrets: inherit
+      with:
+        board: "arduino:avr:uno"
+
