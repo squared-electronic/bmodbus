@@ -5,6 +5,7 @@ import zipfile
 import io
 import os
 import argparse
+import sys
 
 """
 This script runs a Python program on a remote firmware testing service, sending an Arduino binary file and a Python script to be executed on the specified board type.
@@ -34,7 +35,7 @@ def run_program(server, python_program, binary_program, board_type):
         test_id = data.get("test_id")
     else:
         print(f"Error: {response.status_code} - {response.text}")
-        return False
+        return -400
     busy = True
     while busy:
         response = requests.post(server + "/status", headers={"Content-Type": "application/json"}, json={"test_id": test_id, "auth": "1234"})
@@ -47,7 +48,8 @@ def run_program(server, python_program, binary_program, board_type):
                 if results.status_code == 200:
                     results_data = results.json()
                     print(results_data["results"]["stdout"])
-                    return True
+                    exit_code = results_data["results"]["exit_code"]
+                    return exit_code
                 else:
                     print(f"Error fetching results: {results.status_code} - {results.text}")
                 break
@@ -56,7 +58,7 @@ def run_program(server, python_program, binary_program, board_type):
         else:
             print(f"Error checking status: {response.status_code} - {response.text}")
         time.sleep(1)
-    return False
+    return -401
 
 
 if __name__ == "__main__":
@@ -77,6 +79,7 @@ if __name__ == "__main__":
         base_folder = os.path.join(folder, "build", board_type.replace(":", "."))
         zip_in_ram = generate_zip_from_folder(base_folder)
         binary_program = base64.b64encode(zip_in_ram).decode('utf-8')
-        run_program(args.server, python_program, binary_program, board_type)
+        results = run_program(args.server, python_program, binary_program, board_type)
+        sys.exit(results)
     # for example:
     # python run_my_program.py esp32:esp32:esp32 C:\customers\internal\bmodbus\tests\arduino\arduino_unit_tests\interactive_tests.py C:\customers\internal\bmodbus\tests\arduino\arduino_unit_tests http://192.168.150.2:5000
