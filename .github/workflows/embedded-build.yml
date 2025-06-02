@@ -22,14 +22,26 @@ jobs:
 #            cp ./tests/unity/unity_internals.h ./tests/arduino/arduino_unit_tests/unity_internals.h
 #            cp ./bmodbus.h ./tests/arduino/arduino_unit_tests/bmodbus.h
 #            cp ./bmodbus.c ./tests/arduino/arduino_unit_tests/bmodbus.c
+      - name: Cache Arduino CLI
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.arduino15
+          key: ${{ runner.os }}-arduino-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-arduino-
+
       - name: Install Arduino CLI
         uses: arduino/setup-arduino-cli@v2
       - name: Setting up Arduino CLI libraries
         run: |
           arduino-cli config init
-          arduino-cli config set board_manager.additional_urls https://adafruit.github.io/arduino-board-index/package_adafruit_index.json
+          arduino-cli config add board_manager.additional_urls https://adafruit.github.io/arduino-board-index/package_adafruit_index.json
+          arduino-cli config add board_manager.additional_urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
           arduino-cli core update-index
           arduino-cli core install adafruit:samd
+          arduino-cli core install esp32:esp32
+          arduino-cli core install arduino:avr
+          arduino-cli lib install
       - name: Dumping stuff
         run: |
           cd ./tests/arduino
