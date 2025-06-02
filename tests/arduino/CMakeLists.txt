@@ -35,26 +35,27 @@ file(COPY_FILE ../unity/unity.h arduino_unit_tests/unity.h ONLY_IF_DIFFERENT)
 file(COPY_FILE ../unity/unity_internals.h arduino_unit_tests/unity_internals.h ONLY_IF_DIFFERENT)
 file(COPY_FILE ../../bmodbus.c arduino_unit_tests/bmodbus.c ONLY_IF_DIFFERENT)
 file(COPY_FILE ../../bmodbus.h arduino_unit_tests/bmodbus.h ONLY_IF_DIFFERENT)
-arduino_project_add(
-        arduino_unit_tests
-        "${CMAKE_CURRENT_SOURCE_DIR}/arduino_unit_tests"
+set(MY_ARDUINO_TARGETS
         "adafruit:samd:adafruit_feather_m4"
-        DEPENDENCIES "arduino_unit_tests/test_bmodbus_client.h" "arduino_unit_tests/unity.c" "arduino_unit_tests/unity.h" "arduino_unit_tests/unity_internals.h" "arduino_unit_tests/bmodbus.c" "arduino_unit_tests/bmodbus.h"
-)
-
-arduino_project_add(
-        arduino_unit_tests
-        "${CMAKE_CURRENT_SOURCE_DIR}/arduino_unit_tests"
         "esp32:esp32:esp32"
-        DEPENDENCIES "arduino_unit_tests/test_bmodbus_client.h" "arduino_unit_tests/unity.c" "arduino_unit_tests/unity.h" "arduino_unit_tests/unity_internals.h" "arduino_unit_tests/bmodbus.c" "arduino_unit_tests/bmodbus.h"
+        "arduino:avr:uno"
 )
 
 # arduino_client_example
 file(COPY_FILE ../../bmodbus.c arduino_client_example/bmodbus.c ONLY_IF_DIFFERENT)
 file(COPY_FILE ../../bmodbus.h arduino_client_example/bmodbus.h ONLY_IF_DIFFERENT)
-arduino_project_add(
-        arduino_client_example
-        "${CMAKE_CURRENT_SOURCE_DIR}/arduino_client_example"
-        "adafruit:samd:adafruit_feather_m4"
-        DEPENDENCIES "arduino_client_example/bmodbus.c" "arduino_client_example/bmodbus.h" "arduino_client_example/arduino_client_example.ino"
-)
+foreach(BOARD_FQBN ${MY_ARDUINO_TARGETS})
+    message(STATUS "Adding unit tests for board: ${BOARD_FQBN}")
+    arduino_project_add(
+            arduino_unit_tests
+            "${CMAKE_CURRENT_SOURCE_DIR}/arduino_unit_tests"
+            "${BOARD_FQBN}"
+            DEPENDENCIES "arduino_unit_tests/test_bmodbus_client.h" "arduino_unit_tests/unity.c" "arduino_unit_tests/unity.h" "arduino_unit_tests/unity_internals.h" "arduino_unit_tests/bmodbus.c" "arduino_unit_tests/bmodbus.h"
+    )
+    arduino_project_add(
+            arduino_client_example
+            "${CMAKE_CURRENT_SOURCE_DIR}/arduino_client_example"
+            "${BOARD_FQBN}"
+            DEPENDENCIES "arduino_client_example/bmodbus.c" "arduino_client_example/bmodbus.h" "arduino_client_example/arduino_client_example.ino"
+    )
+endforeach()
