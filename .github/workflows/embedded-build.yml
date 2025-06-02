@@ -64,10 +64,29 @@ jobs:
           mkdir build
           cd build
           cmake ..
+      - name: Building Unit Tests
+        run: |
+          cd ./tests/arduino
+          cd build
           TARGET_BOARD=${{ inputs.board }}
-          TARGET_BOARD=build.${TARGET_BOARD//:/\.}
+          TARGET_BOARD=build.${TARGET_BOARD//:/\.}.arduino_unit_tests
           echo "TARGET_BOARD: $TARGET_BOARD"
           cmake --build . -v --target $TARGET_BOARD
+      - name: Running Unit Tests
+        run: |
+          echo ${{ inputs.board }} ${{TEST_SERVER_URL}}
+          echo "FIXME: Get it to run on the test servers!"
+      - name: Building Arduino Client Example
+        run: |
+          cd ./tests/arduino/build
+          TARGET_BOARD=${{ inputs.board }}
+          TARGET_BOARD=build.${TARGET_BOARD//:/\.}.arduino_client_example
+          echo "TARGET_BOARD: $TARGET_BOARD"
+          cmake --build . -v --target $TARGET_BOARD
+      - name: Running Client Example
+        run: |
+          echo ${{ inputs.board }} ${{TEST_SERVER_URL}}
+          echo "FIXME: Get it to run on the test servers!"
       #- name: Compile Sketch
       #  run: |
       #    cd ./tests/arduino
