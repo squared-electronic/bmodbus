@@ -599,6 +599,8 @@ void test_master_write_single_coil(void){
     TEST_ASSERT_NOT_EQUAL(NULL, response);
     TEST_ASSERT_EQUAL(0x05, response->function);
     TEST_ASSERT_EQUAL(1, response->data[0]);
+
+    TEST_ASSERT_EQUAL(0, response->result[0]); //FIXME -- inject an error to test this
 }
 
 #ifndef FAKE_MAIN
