@@ -7,6 +7,7 @@ on:
 jobs:
     build_and_test:
       uses: ./.github/workflows/embedded-build.yml
+      secrets: inherit
       with:
         board: "adafruit:samd:adafruit_feather_m4"
 
