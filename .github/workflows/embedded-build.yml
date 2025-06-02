@@ -47,10 +47,11 @@ jobs:
           ls -l 
           ls -l arduino_unit_tests
       - name: Setup CMake
-        run: |
-          sudo apt-get update -q -y
-          sudo apt-get install -q -y cmake
-          cmake --version
+        uses: lukka/get-cmake@latest
+        #run: |
+        #  sudo apt-get update -q -y
+        #  sudo apt-get install -q -y cmake
+        #  cmake --version
       - name: Running CMake
         run: |
           cd ./tests/arduino

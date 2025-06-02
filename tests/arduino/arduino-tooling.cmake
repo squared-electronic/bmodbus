@@ -31,7 +31,7 @@ function(arduino_project_add PROJECT_NAME SKETCH_DIR BOARD_FQBN)
     ###--build-path "${DEFAULT_BUILD_PATH}"
     # set(TEMP_TARGET_NAME ${OUTPUT_FILE_NAME})
     # message(WARNING "ARDUINO_DEPENDENCIES: ${ARDUINO_DEPENDENCIES}")
-    set(TEMP_TARGET_NAME "build/${BOARD_FQBN}/${PROJECT_NAME}.hex")
+    set(TEMP_TARGET_NAME "build/${BOARD_FQBN}/${PROJECT_NAME}")
     string(REPLACE "/" "." TEMP_TARGET_NAME ${TEMP_TARGET_NAME})
     string(REPLACE ":" "." TEMP_TARGET_NAME ${TEMP_TARGET_NAME})
     add_custom_target(
