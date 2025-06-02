@@ -13,18 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup CMake
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake
-          cmake --version
-      - name: Running CMake
-        run: |
-          cd ./tests/arduino
-          mkdir build
-          cd build
-          cmake ..
-          cmake --build .
 #      - name: Copy required files
 #        run: |
 #            ls -l
@@ -47,10 +35,22 @@ jobs:
           cd ./tests/arduino
           ls -l 
           ls -l arduino_unit_tests
-      - name: Compile Sketch
+      - name: Setup CMake
+        run: |
+          sudo apt-get update -q -y
+          sudo apt-get install -q -y cmake
+          cmake --version
+      - name: Running CMake
         run: |
           cd ./tests/arduino
-          arduino-cli compile --fqbn "adafruit:samd:adafruit_feather_m4" --build-property "compiler.c.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write"  --build-property "compiler.cpp.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write" --export-binaries arduino_unit_tests
+          mkdir build
+          cd build
+          cmake ..
+          cmake --build . -v
+      #- name: Compile Sketch
+      #  run: |
+      #    cd ./tests/arduino
+      #    arduino-cli compile --fqbn "adafruit:samd:adafruit_feather_m4" --build-property "compiler.c.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write"  --build-property "compiler.cpp.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write" --export-binaries arduino_unit_tests
 #          arduino-cli config init
 #          arduino-cli config set board_manager.additional_urls https://adafruit.github.io/arduino-board-index/package_adafruit_index.json
 #          arduino-cli core update-index
