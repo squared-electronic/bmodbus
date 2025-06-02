@@ -80,6 +80,7 @@ if __name__ == "__main__":
         zip_in_ram = generate_zip_from_folder(base_folder)
         binary_program = base64.b64encode(zip_in_ram).decode('utf-8')
         results = run_program(args.server, python_program, binary_program, board_type)
+        print("Results:", results)
         sys.exit(results)
     # for example:
     # python run_my_program.py esp32:esp32:esp32 C:\customers\internal\bmodbus\tests\arduino\arduino_unit_tests\interactive_tests.py C:\customers\internal\bmodbus\tests\arduino\arduino_unit_tests http://192.168.150.2:5000

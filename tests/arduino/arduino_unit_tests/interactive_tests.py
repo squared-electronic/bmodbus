@@ -1,4 +1,5 @@
 print("Hello from child.py")
+import sys
 import serial
 print("imported serial")
 import os
@@ -18,7 +19,10 @@ for i in range(5):
             break
 print("read data", len(data), "bytes")
 # write the data to stdout
+
 print(data.decode('utf-8'))
-assert("" in data.decode('utf-8'))
+if "" in data.decode('utf-8')
+    sys.exit(0)
+sys.exit(1)  # Exit with an error code if no data was read or if the data is empty
 # "All tests completed" is printed in between the different runs of all the tests, so split it and
 #print("done")
