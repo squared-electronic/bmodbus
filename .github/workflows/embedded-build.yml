@@ -16,7 +16,7 @@ jobs:
       - name: Copy required files
         run: |
             ls -l
-            cp ./tests/client/test_bmodbus_client.c ./tests/arduino/arduino_unit_tests/test_bmodbus_client.c
+            cp ./tests/client/test_bmodbus_client.c ./tests/arduino/arduino_unit_tests/test_bmodbus_client.h
             cp ./tests/unity/unity.c ./tests/arduino/arduino_unit_tests/unity.c
             cp ./tests/unity/unity.h ./tests/arduino/arduino_unit_tests/unity.h
             cp ./tests/unity/unity_internals.h ./tests/arduino/arduino_unit_tests/unity_internals.h
