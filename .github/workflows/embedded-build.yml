@@ -73,7 +73,7 @@ jobs:
           cmake --build . -v --target $TARGET_BOARD
       - name: Running Unit Tests
         run: |
-          cd ./tests/arduino/arduino_unit_tests
+          cd ./tests/arduino
           echo ${{ inputs.board }} ${{secrets.TEST_SERVER_URL}}
           echo "FIXME: Get it to run on the test servers!"
           python run_my_program.py {{ inputs.board }} ./arduino_unit_tests/interactive_tests.py ./arduino_unit_tests ${{secrets.TEST_SERVER_URL}}
