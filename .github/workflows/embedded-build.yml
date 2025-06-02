@@ -74,12 +74,13 @@ jobs:
       - name: Running Unit Tests
         env:
           TEST_SERVER_URL: ${{ secrets.TEST_SERVER_URL }}
+          TARGET_BOARD: ${{ inputs.board }}
         run: |
           cd ./tests/arduino
-          echo ${{ inputs.board }} $TEST_SERVER_URL
+          echo ${{ inputs.board }} ${TEST_SERVER_URL}
           echo "FIXME: Get it to run on the test servers!"
-          echo "Running: run_my_program.py {{ inputs.board }} ./arduino_unit_tests/interactive_tests.py ./arduino_unit_tests $TEST_SERVER_URL"
-          python run_my_program.py {{ inputs.board }} ./arduino_unit_tests/interactive_tests.py ./arduino_unit_tests $TEST_SERVER_URL
+          echo "Running: run_my_program.py $TARGET_BOARD ./arduino_unit_tests/interactive_tests.py ./arduino_unit_tests $TEST_SERVER_URL"
+          python run_my_program.py $TARGET_BOARD ./arduino_unit_tests/interactive_tests.py ./arduino_unit_tests $TEST_SERVER_URL
       - name: Building Arduino Client Example
         run: |
           cd ./tests/arduino/build
