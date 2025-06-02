@@ -74,7 +74,7 @@ jobs:
           cmake --build . -v --target $TARGET_BOARD
       - name: Running Unit Tests
         run: |
-          echo ${{ inputs.board }} ${{TEST_SERVER_URL}}
+          echo ${{ inputs.board }} ${{secrets.TEST_SERVER_URL}}
           echo "FIXME: Get it to run on the test servers!"
       - name: Building Arduino Client Example
         run: |
@@ -85,7 +85,7 @@ jobs:
           cmake --build . -v --target $TARGET_BOARD
       - name: Running Client Example
         run: |
-          echo ${{ inputs.board }} ${{TEST_SERVER_URL}}
+          echo ${{ inputs.board }} ${{secrets.TEST_SERVER_URL}}
           echo "FIXME: Get it to run on the test servers!"
       #- name: Compile Sketch
       #  run: |
