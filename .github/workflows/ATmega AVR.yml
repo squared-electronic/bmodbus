@@ -10,5 +10,5 @@ jobs:
       secrets: inherit
       with:
         board: "arduino:avr:uno"
-        build_only: true
+        build_type: 'build_only'  # Change to 'build_and_test' if you want to run tests
 

@@ -6,10 +6,11 @@ on:
       board:
         required: true
         type: string
-      build_only:
+      build_type:
         required: false
-        type: boolean
-        default: false
+        type: string
+        default: "build_and_test"
+
 
 
 jobs:
@@ -67,7 +68,7 @@ jobs:
         env:
           TEST_SERVER_URL: ${{ secrets.TEST_SERVER_URL }}
           TARGET_BOARD: ${{ inputs.board }}
-        if: ${{ !inputs.build_only }}
+        if: ${{ inputs.build_type == 'build_and_test' }}
         run: |
           cd ./tests/arduino
           echo ${{ inputs.board }} ${TEST_SERVER_URL}
@@ -82,7 +83,7 @@ jobs:
           echo "TARGET_BOARD: $TARGET_BOARD"
           cmake --build . -v --target $TARGET_BOARD
       - name: Running Client Example
-        if: ${{ !inputs.build_only }}
+        if: ${{ inputs.build_type == 'build_and_test' }}
         run: |
           echo ${{ inputs.board }} ${{secrets.TEST_SERVER_URL}}
           echo "FIXME: Get it to run on the test servers!"
