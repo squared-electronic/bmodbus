@@ -41,7 +41,6 @@ jobs:
           arduino-cli core install adafruit:samd
           arduino-cli core install esp32:esp32
           arduino-cli core install arduino:avr
-          arduino-cli lib install
       - name: Dumping stuff
         run: |
           cd ./tests/arduino
