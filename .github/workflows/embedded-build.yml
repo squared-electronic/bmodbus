@@ -1,15 +1,18 @@
 name: Embedded Build
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+#  push:
+#    branches: [ "main" ]
+#  pull_request:
+#    branches: [ "main" ]
+  workflow_call:
+    inputs:
+      board:
+        required: true
+        type: string
+
 
 jobs:
   arduino_builds:
-    #strategy:
-    #  matrix:
-    #    board: [ "adafruit:samd:adafruit_feather_m4" ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -61,7 +64,10 @@ jobs:
           mkdir build
           cd build
           cmake ..
-          cmake --build . -v
+          TARGET_BOARD=${{ inputs.board }}
+          TARGET_BOARD=build.${TARGET_BOARD//:/\.}
+          echo "TARGET_BOARD: $TARGET_BOARD"
+          cmake --build . -v --target $TARGET_BOARD
       #- name: Compile Sketch
       #  run: |
       #    cd ./tests/arduino
