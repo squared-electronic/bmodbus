@@ -16,12 +16,12 @@ jobs:
       - name: Copy required files
         run: |
             ls -l
-            cp ./tests/client/test_bmodbus_client.c ./tests/arduino/arduino_client_example/test_bmodbus_client.c
-            cp ./tests/unity/unity.c ./tests/arduino/arduino_client_example/unity.c
-            cp ./tests/unity/unity.h ./tests/arduino/arduino_client_example/unity.h
-            cp ./tests/unity/unity_internals.h ./tests/arduino/arduino_client_example/unity_internals.h
-            cp ./bmodbus.h ./tests/arduino/arduino_client_example/bmodbus.h
-            cp ./bmodbus.c ./tests/arduino/arduino_client_example/bmodbus.c
+            cp ./tests/client/test_bmodbus_client.c ./tests/arduino/arduino_unit_tests/test_bmodbus_client.c
+            cp ./tests/unity/unity.c ./tests/arduino/arduino_unit_tests/unity.c
+            cp ./tests/unity/unity.h ./tests/arduino/arduino_unit_tests/unity.h
+            cp ./tests/unity/unity_internals.h ./tests/arduino/arduino_unit_tests/unity_internals.h
+            cp ./bmodbus.h ./tests/arduino/arduino_unit_tests/bmodbus.h
+            cp ./bmodbus.c ./tests/arduino/arduino_unit_tests/bmodbus.c
       - name: Install Arduino CLI
         uses: arduino/setup-arduino-cli@v2
       - name: Setting up Arduino CLI libraries
@@ -34,11 +34,11 @@ jobs:
         run: |
           cd ./tests/arduino
           ls -l 
-          ls -l arduino_client_example
+          ls -l arduino_unit_tests
       - name: Compile Sketch
         run: |
           cd ./tests/arduino
-          arduino-cli compile --fqbn "adafruit:samd:adafruit_feather_m4" --build-property "compiler.c.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write"  --build-property "compiler.cpp.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write" --export-binaries arduino_client_example
+          arduino-cli compile --fqbn "adafruit:samd:adafruit_feather_m4" --build-property "compiler.c.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write"  --build-property "compiler.cpp.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write" --export-binaries arduino_unit_tests
 #          arduino-cli config init
 #          arduino-cli config set board_manager.additional_urls https://adafruit.github.io/arduino-board-index/package_adafruit_index.json
 #          arduino-cli core update-index
