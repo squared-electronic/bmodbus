@@ -10,4 +10,5 @@ jobs:
       secrets: inherit
       with:
         board: "arduino:avr:uno"
+        build_only: true
 
