@@ -13,15 +13,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Copy required files
+      - name: Setup CMake
         run: |
-            ls -l
-            cp ./tests/client/test_bmodbus_client.c ./tests/arduino/arduino_unit_tests/test_bmodbus_client.h
-            cp ./tests/unity/unity.c ./tests/arduino/arduino_unit_tests/unity.c
-            cp ./tests/unity/unity.h ./tests/arduino/arduino_unit_tests/unity.h
-            cp ./tests/unity/unity_internals.h ./tests/arduino/arduino_unit_tests/unity_internals.h
-            cp ./bmodbus.h ./tests/arduino/arduino_unit_tests/bmodbus.h
-            cp ./bmodbus.c ./tests/arduino/arduino_unit_tests/bmodbus.c
+          sudo apt-get update
+          sudo apt-get install -y cmake
+          cmake --version
+      - name: Running CMake
+        run: |
+          cd ./tests/arduino
+          mkdir build
+          cd build
+          cmake ..
+          cmake --build .
+#      - name: Copy required files
+#        run: |
+#            ls -l
+#            cp ./tests/client/test_bmodbus_client.c ./tests/arduino/arduino_unit_tests/test_bmodbus_client.h
+#            cp ./tests/unity/unity.c ./tests/arduino/arduino_unit_tests/unity.c
+#            cp ./tests/unity/unity.h ./tests/arduino/arduino_unit_tests/unity.h
+#            cp ./tests/unity/unity_internals.h ./tests/arduino/arduino_unit_tests/unity_internals.h
+#            cp ./bmodbus.h ./tests/arduino/arduino_unit_tests/bmodbus.h
+#            cp ./bmodbus.c ./tests/arduino/arduino_unit_tests/bmodbus.c
       - name: Install Arduino CLI
         uses: arduino/setup-arduino-cli@v2
       - name: Setting up Arduino CLI libraries
