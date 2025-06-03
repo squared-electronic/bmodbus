@@ -44,6 +44,9 @@ set(arduino_build_configurations
         "arduino:avr:uno -DTEST_SKIP_CLIENT_ONLY_TESTS"
         "esp32:esp32:esp32 "
         "esp32:esp32:esp32s3 "
+        "rp2040:rp2040:rpipico "
+        "rp2040:rp2040:rpipico2w "
+        "rp2040:rp2040:rpipico2w:arch=riscv "
 )
 
 foreach(BOARD_CONFIG IN LISTS arduino_build_configurations)

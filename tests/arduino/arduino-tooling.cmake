@@ -34,6 +34,7 @@ function(arduino_project_add PROJECT_NAME SKETCH_DIR BOARD_FQBN EXTRA_DEFINITION
     set(TEMP_TARGET_NAME "build/${BOARD_FQBN}/${PROJECT_NAME}")
     string(REPLACE "/" "." TEMP_TARGET_NAME ${TEMP_TARGET_NAME})
     string(REPLACE ":" "." TEMP_TARGET_NAME ${TEMP_TARGET_NAME})
+    string(REPLACE "=" "." TEMP_TARGET_NAME ${TEMP_TARGET_NAME})
     add_custom_target(
             ${TEMP_TARGET_NAME} ALL
             COMMAND ${ARDUINO_CLI_EXECUTABLE} compile
