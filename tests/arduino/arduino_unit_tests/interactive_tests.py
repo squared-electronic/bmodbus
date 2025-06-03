@@ -8,7 +8,7 @@ ser = serial.Serial(port, 115200, timeout=1)
 print("opened serial port", ser.name)
 # read 10 seconds of data
 data = b""
-for i in range(5):
+for i in range(10):
     next = ser.read(1 * 11520)  # 1 seconds max
     if type(next) is bytes:
         data += next
