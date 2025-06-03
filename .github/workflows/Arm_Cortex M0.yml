@@ -1,0 +1,14 @@
+name: Arm Cortex M0+ RP2040
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+jobs:
+    build_and_test:
+      uses: ./.github/workflows/embedded-build.yml
+      secrets: inherit
+      with:
+        board: "rp2040:rp2040:rpipico"
+        build_type: 'build_only'  # Change to 'build_and_test' if you want to run tests
+
