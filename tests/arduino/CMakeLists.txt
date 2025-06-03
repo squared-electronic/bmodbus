@@ -35,27 +35,42 @@ file(COPY_FILE ../unity/unity.h arduino_unit_tests/unity.h ONLY_IF_DIFFERENT)
 file(COPY_FILE ../unity/unity_internals.h arduino_unit_tests/unity_internals.h ONLY_IF_DIFFERENT)
 file(COPY_FILE ../../bmodbus.c arduino_unit_tests/bmodbus.c ONLY_IF_DIFFERENT)
 file(COPY_FILE ../../bmodbus.h arduino_unit_tests/bmodbus.h ONLY_IF_DIFFERENT)
-set(MY_ARDUINO_TARGETS
-        "adafruit:samd:adafruit_feather_m4"
-        "esp32:esp32:esp32"
-        "arduino:avr:uno"
-)
-
 # arduino_client_example
 file(COPY_FILE ../../bmodbus.c arduino_client_example/bmodbus.c ONLY_IF_DIFFERENT)
 file(COPY_FILE ../../bmodbus.h arduino_client_example/bmodbus.h ONLY_IF_DIFFERENT)
-foreach(BOARD_FQBN ${MY_ARDUINO_TARGETS})
+
+set(arduino_build_configurations
+        "adafruit:samd:adafruit_feather_m4 "
+        "arduino:avr:uno -DTEST_SKIP_CLIENT_ONLY_TESTS"
+        # "esp32:esp32:esp32 "
+        #"esp32:esp32:esp32s3 -DIGNOREME"
+)
+
+foreach(BOARD_CONFIG IN LISTS arduino_build_configurations)
+    MESSAGE(STATUS "Processing board configuration: ${BOARD_CONFIG}")
+    string(REPLACE " " ";" temp_list_for_splitting "${BOARD_CONFIG}")
+    list(GET temp_list_for_splitting 0 BOARD_FQBN)
+    MESSAGE(STATUS "Board FQBN: ${BOARD_FQBN}")
+    list(LENGTH temp_list_for_splitting list_length)
+    if(list_length EQUAL 2)
+        list(GET temp_list_for_splitting 1 EXTRA_DEFINITIONS)
+    else()
+        set(EXTRA_DEFINITIONS "")
+    endif()
+    MESSAGE(STATUS "Extra definitions: ${EXTRA_DEFINITIONS}")
     message(STATUS "Adding unit tests for board: ${BOARD_FQBN}")
     arduino_project_add(
             arduino_unit_tests
             "${CMAKE_CURRENT_SOURCE_DIR}/arduino_unit_tests"
             "${BOARD_FQBN}"
+            "${EXTRA_DEFINITIONS}"
             DEPENDENCIES "arduino_unit_tests/test_bmodbus_client.h" "arduino_unit_tests/unity.c" "arduino_unit_tests/unity.h" "arduino_unit_tests/unity_internals.h" "arduino_unit_tests/bmodbus.c" "arduino_unit_tests/bmodbus.h"
     )
     arduino_project_add(
             arduino_client_example
             "${CMAKE_CURRENT_SOURCE_DIR}/arduino_client_example"
             "${BOARD_FQBN}"
+            "${EXTRA_DEFINITIONS}"
             DEPENDENCIES "arduino_client_example/bmodbus.c" "arduino_client_example/bmodbus.h" "arduino_client_example/arduino_client_example.ino"
     )
 endforeach()

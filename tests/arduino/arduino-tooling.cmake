@@ -8,7 +8,7 @@ if(NOT ARDUINO_CLI_EXECUTABLE)
     message(FATAL_ERROR "Arduino CLI not found. Please ensure it's in your PATH or specify its location.")
 endif()
 
-function(arduino_project_add PROJECT_NAME SKETCH_DIR BOARD_FQBN)
+function(arduino_project_add PROJECT_NAME SKETCH_DIR BOARD_FQBN EXTRA_DEFINITIONS)
     # Optional: Define a default build path if not provided
     # set(DEFAULT_BUILD_PATH "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_build")
 
@@ -38,12 +38,20 @@ function(arduino_project_add PROJECT_NAME SKETCH_DIR BOARD_FQBN)
             ${TEMP_TARGET_NAME} ALL
             COMMAND ${ARDUINO_CLI_EXECUTABLE} compile
             --fqbn "${BOARD_FQBN}"
-            --build-property "compiler.c.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write"
-            --build-property "compiler.cpp.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write"
+            --build-property "compiler.c.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write ${EXTRA_DEFINITIONS}"
+            --build-property "compiler.cpp.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write ${EXTRA_DEFINITIONS}"
             --export-binaries
+            --verbose
             "${SKETCH_DIR}"
+            COMMENT "ZZZBuilding Arduino project '${PROJECT_NAME}' for board '${BOARD_FQBN}'
+            ${ARDUINO_CLI_EXECUTABLE} compile
+            --fqbn ${BOARD_FQBN}
+            --build-property \"compiler.c.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write ${EXTRA_DEFINITIONS}\"
+            --build-property \"compiler.cpp.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write ${EXTRA_DEFINITIONS}\"
+            --export-binaries
+            --verbose
+            ${SKETCH_DIR}"
             BYPRODUCTS ${OUTPUT_FILE_NAME}
-            COMMENT "Building Arduino project '${PROJECT_NAME}' for board '${BOARD_FQBN}'"
             DEPENDS ${ARDUINO_DEPENDENCIES}
             VERBATIM
     )
