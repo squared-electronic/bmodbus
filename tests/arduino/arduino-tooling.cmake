@@ -38,16 +38,16 @@ function(arduino_project_add PROJECT_NAME SKETCH_DIR BOARD_FQBN EXTRA_DEFINITION
             ${TEMP_TARGET_NAME} ALL
             COMMAND ${ARDUINO_CLI_EXECUTABLE} compile
             --fqbn "${BOARD_FQBN}"
-            --build-property "compiler.c.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write ${EXTRA_DEFINITIONS}"
-            --build-property "compiler.cpp.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write ${EXTRA_DEFINITIONS}"
+            --build-property "compiler.c.extra_flags=-DUNITY_INCLUDE_CONFIG_H ${EXTRA_DEFINITIONS}"
+            --build-property "compiler.cpp.extra_flags=-DUNITY_INCLUDE_CONFIG_H ${EXTRA_DEFINITIONS}"
             --export-binaries
             --verbose
             "${SKETCH_DIR}"
             COMMENT "ZZZBuilding Arduino project '${PROJECT_NAME}' for board '${BOARD_FQBN}'
             ${ARDUINO_CLI_EXECUTABLE} compile
             --fqbn ${BOARD_FQBN}
-            --build-property \"compiler.c.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write ${EXTRA_DEFINITIONS}\"
-            --build-property \"compiler.cpp.extra_flags=-DUNITY_OUTPUT_CHAR=uut_serial_write ${EXTRA_DEFINITIONS}\"
+            --build-property \"compiler.c.extra_flags=-DUNITY_INCLUDE_CONFIG_H  ${EXTRA_DEFINITIONS}\"
+            --build-property \"compiler.cpp.extra_flags=-DUNITY_INCLUDE_CONFIG_H  ${EXTRA_DEFINITIONS}\"
             --export-binaries
             --verbose
             ${SKETCH_DIR}"
