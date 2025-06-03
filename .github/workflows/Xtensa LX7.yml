@@ -1,0 +1,14 @@
+name: Xtensa LX7 ESP32-S3
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+jobs:
+    build_and_test:
+      uses: ./.github/workflows/embedded-build.yml
+      secrets: inherit
+      with:
+        board: "esp32:esp32:esp32s3"
+        build_type: 'build_only'  # Change to 'build_only' if you want to skip tests
+
