@@ -1,4 +1,4 @@
-name: ATmega AVR
+name: ATmega AVR ATmega328P
 on:
   push:
     branches: [ "main" ]
@@ -10,5 +10,5 @@ jobs:
       secrets: inherit
       with:
         board: "arduino:avr:uno"
-        build_type: 'build_only'  # Change to 'build_and_test' if you want to run tests
+        build_type: 'build_and_test'
 
