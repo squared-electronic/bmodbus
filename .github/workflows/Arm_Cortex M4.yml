@@ -1,4 +1,4 @@
-name: Arm Cortex M4
+name: Arm Cortex M4 Atmega SAMD51
 on:
   push:
     branches: [ "main" ]
