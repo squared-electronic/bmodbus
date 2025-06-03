@@ -479,7 +479,7 @@ modbus_uart_request_t * modbus_master_send_internal(modbus_master_t *bmodbus, ui
     int i;
     uint16_t crc = 0xFFFF;
     //Check the state prior to sending
-    if(bmodbus->state != MASTER_STATE_IDLE){
+    if((bmodbus->state != MASTER_STATE_IDLE) && (bmodbus->state != MASTER_STATE_RESPONSE_READY)){
         //Error, we are not idle, fail to send!
         return NULL;
     }
