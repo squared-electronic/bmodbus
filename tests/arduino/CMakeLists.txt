@@ -42,8 +42,8 @@ file(COPY_FILE ../../bmodbus.h arduino_client_example/bmodbus.h ONLY_IF_DIFFEREN
 set(arduino_build_configurations
         "adafruit:samd:adafruit_feather_m4 "
         "arduino:avr:uno -DTEST_SKIP_CLIENT_ONLY_TESTS"
-        # "esp32:esp32:esp32 "
-        #"esp32:esp32:esp32s3 -DIGNOREME"
+        "esp32:esp32:esp32 "
+        "esp32:esp32:esp32s3 "
 )
 
 foreach(BOARD_CONFIG IN LISTS arduino_build_configurations)
