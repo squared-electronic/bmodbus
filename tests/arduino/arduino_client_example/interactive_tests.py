@@ -32,7 +32,7 @@ def main():
     print("PASSED")
     print("write register tests:", end=' ')
     # Now write 10 registers starting at 0x00
-    length = 100
+    length = 10
     inst.write_registers(0, [i for i in range(length)])  # start address, list of values
     # Now write to the max register location
     read_back = inst.read_registers(0, length)  # Read out 100 registers starting at address 0x00
