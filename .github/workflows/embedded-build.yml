@@ -87,5 +87,8 @@ jobs:
       - name: Running Client Example
         if: ${{ inputs.build_type == 'build_and_test' }}
         run: |
-          echo ${{ inputs.board }} ${{secrets.TEST_SERVER_URL}}
+          cd ./tests/arduino
+          echo ${{ inputs.board }} ${TEST_SERVER_URL}
           echo "FIXME: Get it to run on the test servers!"
+          echo "Running: run_my_program.py $TARGET_BOARD ./arduino_client_example/interactive_tests.py ./arduino_client_example $TEST_SERVER_URL"
+          python run_my_program.py $TARGET_BOARD ./arduino_client_example/interactive_tests.py ./arduino_client_example $TEST_SERVER_URL
