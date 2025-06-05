@@ -85,6 +85,9 @@ jobs:
           echo "TARGET_BOARD: $TARGET_BOARD"
           cmake --build . -v --target $TARGET_BOARD
       - name: Running Client Example
+        env:
+          TEST_SERVER_URL: ${{ secrets.TEST_SERVER_URL }}
+          TARGET_BOARD: ${{ inputs.board }}
         if: ${{ inputs.build_type == 'build_and_test' }}
         run: |
           cd ./tests/arduino
