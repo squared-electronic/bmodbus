@@ -10,5 +10,4 @@ jobs:
       secrets: inherit
       with:
         board: "esp32:esp32:esp32s3"
-        build_type: 'build_only'  # Change to 'build_only' if you want to skip tests
 
