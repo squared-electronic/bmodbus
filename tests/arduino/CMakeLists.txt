@@ -77,3 +77,12 @@ foreach(BOARD_CONFIG IN LISTS arduino_build_configurations)
             DEPENDENCIES "arduino_client_example/bmodbus.c" "arduino_client_example/bmodbus.h" "arduino_client_example/arduino_client_example.ino"
     )
 endforeach()
+
+#Add the 8051 build
+arduino_project_add(
+        8051_client
+        "${CMAKE_CURRENT_SOURCE_DIR}/8051_client"
+        "CH55xDuino:mcs51:ch552:clock=16internal"
+        "-DBMB_MAXIMUM_MESSAGE_SIZE=16 -DBMODBUS_NO_MASTER"
+        DEPENDENCIES "8051_client/bmodbus.c" "8051_client/bmodbus.h" "8051_client/8051_client.ino"
+)

@@ -1,0 +1,14 @@
+name: 8051
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+jobs:
+    build_only:
+      uses: ./.github/workflows/embedded-build.yml
+      secrets: inherit
+      with:
+        board: "build.CH55xDuino.mcs51.ch552.clock.16internal.8051_client"
+        build_type: 'build_only'  # Change to 'build_and_test' if you want to run tests
+
