@@ -5,8 +5,20 @@ This is a straightforward modbus RTU implementation in C designed for embedded s
 It's very lightweight in terms of RAM, Flash and processing. Stop worrying about modbus implementations and focus on your application.
 
 ## Testing Status
-![Unit Tests Little Endian](https://github.com/ThingDone/bmodbus/actions/workflows/cmake-big-endian-tests.yml/badge.svg)
-![Unit Tests Big Endian](https://github.com/ThingDone/bmodbus/actions/workflows/cmake-single-platform.yml/badge.svg)
+We test on a variety of platforms including physical boards.
+Table of testing platforms:
+
+| Processor Core          | Part                   | Status                                                                                                                  | Building | Unit Tests Covered | Client Tested Covered |
+|-------------------------|------------------------|-------------------------------------------------------------------------------------------------------------------------|----------|--------------------|-----------------------|
+| Intel X64 (64-bit)      | Native                 | ![Unit Tests Little Endian](https://github.com/ThingDone/bmodbus/actions/workflows/cmake-single-platform.yml/badge.svg) | ✅        | ✅                 |                       |
+| ATMega (8-bit)          | ATMega328p Arduino Uno | ![Atmega](https://github.com/ThingDone/bmodbus/actions/workflows/ATmega%20AVR.yml/badge.svg)                            | ✅        | ✅                 | ✅                     |
+| ARM Cortex-M4 (32-bit)  | Arm Cortex M4 SAMD51   | ![Arm Cortex M4](https://github.com/ThingDone/bmodbus/actions/workflows/Arm_Cortex%20M4.yml/badge.svg)                  | ✅        | ✅                 | ✅                     |
+| Xtensa LX6 (32-bit)     | ESP32D                 | ![Xtensa Lx6](https://github.com/ThingDone/bmodbus/actions/workflows/Xtensa%20LX6.yml/badge.svg)                        | ✅        | ✅                 | ✅                     |
+| Xtensa LX7 (32-bit)     | ESP32-S3               | ![Xtensa Lx6](https://github.com/ThingDone/bmodbus/actions/workflows/Xtensa%20LX6.yml/badge.svg)                        | ✅        | ✅                 | ✅                     |
+| 8051 (8-bit)            | CH552 Arduino          | ![8051](https://github.com/ThingDone/bmodbus/actions/workflows/8051.yml/badge.svg)                                      | ✅        |                    |                       |
+| ARM Cortex-M0+ (32-bit) | Arm Cortex M0+ RP2040  | ![Arm Cortex M0+](https://github.com/ThingDone/bmodbus/actions/workflows/Arm_Cortex%20M0.yml/badge.svg)                 | ✅        |                    |                       |
+| ARM Cortex-M33 (32-bit) | Arm Cortext M33 RP2350 | ![ARM Cortex-M33](https://github.com/ThingDone/bmodbus/actions/workflows/Arm_Cortex%20M33.yml/badge.svg)                | ✅        |                    |                       |
+| RISC-V (32-bit)         | Hazard3 Core RP2350    | ![RISC-V](https://github.com/ThingDone/bmodbus/actions/workflows/RISCV%20Hazard3.yml/badge.svg)                         | ✅        |                    |                       |
 
 ## Modbus Functionality Supported
 This implements both a modbus master and a modbus client (slave) implementation. You can have multiple instances of each type.
