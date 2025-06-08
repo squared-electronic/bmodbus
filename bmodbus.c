@@ -343,6 +343,7 @@ void bmodbus_client_send_complete(modbus_client_t * bmodbus){
     }
 }
 
+#ifndef BMODBUS_NO_MASTER
 void bmodbus_master_init(modbus_master_t *bmodbus, uint32_t interframe_delay){
     bmodbus->state = MASTER_STATE_IDLE;
     bmodbus->interframe_delay = interframe_delay;
@@ -572,3 +573,4 @@ modbus_request_t * bmodbus_master_get_response(modbus_master_t *bmodbus){
     }
     return NULL;
 }
+#endif //BMODBUS_NO_MASTER
