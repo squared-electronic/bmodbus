@@ -38,6 +38,9 @@ file(COPY_FILE ../../bmodbus.h arduino_unit_tests/bmodbus.h ONLY_IF_DIFFERENT)
 # arduino_client_example
 file(COPY_FILE ../../bmodbus.c arduino_client_example/bmodbus.c ONLY_IF_DIFFERENT)
 file(COPY_FILE ../../bmodbus.h arduino_client_example/bmodbus.h ONLY_IF_DIFFERENT)
+# 8051 client
+file(COPY_FILE ../../bmodbus.c 8051_client/bmodbus.c ONLY_IF_DIFFERENT)
+file(COPY_FILE ../../bmodbus.h 8051_client/bmodbus.h ONLY_IF_DIFFERENT)
 
 set(arduino_build_configurations
         "adafruit:samd:adafruit_feather_m4 "
