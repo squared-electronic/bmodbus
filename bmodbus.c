@@ -74,19 +74,7 @@ void bmodbus_client_init(modbus_client_t *bmodbus, uint32_t interframe_delay, ui
 }
 
 void bmodbus_client_deinit(modbus_client_t *bmodbus){
-    printf("bmodbus_client_deinit\n");
     bmodbus->state = CLIENT_NO_INIT;
-}
-
-static inline uint8_t process_request(modbus_client_t *bmodbus){
-    //Returns true iff the request was processed successfully via events
-    MODBUS_UNUSED(bmodbus);
-#ifdef MODBUS1_CALLBACK
-    if(bmodbus == &modbus1){
-        return MODBUS1_CALLBACK(bmodbus);
-    }
-#endif //MODBUS1_CALLBACK
-    return 0;
 }
 
 static uint16_t crc_update(uint16_t crc, uint8_t byte) {
@@ -203,9 +191,6 @@ void bmodbus_client_next_byte(modbus_client_t *bmodbus, uint32_t microseconds, u
                 }
                 bmodbus->payload.request.result = 0;
                 bmodbus->state = CLIENT_STATE_PROCESSING_REQUEST;
-                if(process_request(bmodbus)){
-                    //event processing was complete
-                }
             }else{
                 //FIXME bad CRC
                 bmodbus->state = CLIENT_STATE_WAITING_FOR_NEXT_MESSAGE;
