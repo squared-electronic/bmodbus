@@ -9,6 +9,8 @@ jobs:
       uses: ./.github/workflows/embedded-build.yml
       secrets: inherit
       with:
-        board: "build.CH55xDuino.mcs51.ch552.clock.16internal.8051_client"
+        board: "CH55xDuino.mcs51.ch552"
         build_type: 'build_only'  # Change to 'build_and_test' if you want to run tests
+        skip_all_builds: "skip" # Skips all builds but sets up the environment for testing
+        s8051_build: 'build' # Build the 8051 client
 

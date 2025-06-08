@@ -10,6 +10,14 @@ on:
         required: false
         type: string
         default: "build_and_test"
+      skip_all_builds:
+        required: false
+        type: string
+        default: "build_all"  # Set to 'skip' to skip all builds, useful for testing purposes
+      s8051_build:
+        required: false
+        type: string
+        default: "skip"  # Set to 'skip' to skip the 8051 build, useful for testing purposes
 
 
 
@@ -62,6 +70,7 @@ jobs:
           cd build
           cmake ..
       - name: Building Unit Tests
+        if: ${{ inputs.skip_all_builds != 'skip' }}
         run: |
           cd ./tests/arduino/build
           TARGET_BOARD=${{ inputs.board }}
@@ -72,7 +81,7 @@ jobs:
         env:
           TEST_SERVER_URL: ${{ secrets.TEST_SERVER_URL }}
           TARGET_BOARD: ${{ inputs.board }}
-        if: ${{ inputs.build_type == 'build_and_test' }}
+        if: ${{ (inputs.build_type == 'build_and_test') && (inputs.skip_all_builds != 'skip') }}
         run: |
           cd ./tests/arduino
           echo ${{ inputs.board }} ${TEST_SERVER_URL}
@@ -80,6 +89,7 @@ jobs:
           echo "Running: run_my_program.py $TARGET_BOARD ./arduino_unit_tests/interactive_tests.py ./arduino_unit_tests $TEST_SERVER_URL"
           python run_my_program.py $TARGET_BOARD ./arduino_unit_tests/interactive_tests.py ./arduino_unit_tests $TEST_SERVER_URL
       - name: Building Arduino Client Example
+        if: ${{ inputs.skip_all_builds != 'skip' }}
         run: |
           cd ./tests/arduino/build
           TARGET_BOARD=${{ inputs.board }}
@@ -90,10 +100,17 @@ jobs:
         env:
           TEST_SERVER_URL: ${{ secrets.TEST_SERVER_URL }}
           TARGET_BOARD: ${{ inputs.board }}
-        if: ${{ inputs.build_type == 'build_and_test' }}
+        if: ${{ (inputs.build_type == 'build_and_test') && (inputs.skip_all_builds != 'skip') }}
         run: |
           cd ./tests/arduino
           echo ${{ inputs.board }} ${TEST_SERVER_URL}
           echo "FIXME: Get it to run on the test servers!"
           echo "Running: run_my_program.py $TARGET_BOARD ./arduino_client_example/interactive_tests.py ./arduino_client_example $TEST_SERVER_URL"
           python run_my_program.py $TARGET_BOARD ./arduino_client_example/interactive_tests.py ./arduino_client_example $TEST_SERVER_URL
+      - name: Building Arduino Client Example
+        if: ${{ inputs.s8051_build != 'skip' }}
+        run: |
+          cd ./tests/arduino/build
+          TARGET_BOARD=build.CH55xDuino.mcs51.ch552.clock.16internal.8051_client
+          echo "TARGET_BOARD: $TARGET_BOARD"
+          cmake --build . -v --target $TARGET_BOARD
