@@ -49,7 +49,7 @@ extern "C" {
 
 //This can be used to modify the maximum message size to something other than 256 bytes -- it reduces the RAM required
 #ifndef BMB_MAXIMUM_MESSAGE_SIZE
-#define BMB_MAXIMUM_MESSAGE_SIZE 256
+#define BMB_MAXIMUM_MESSAGE_SIZE 32
 #endif
 //FIXME -- unsure what's the exact number here, but it may change based upon supported commands
 #define BMB_MAXIMUM_REGISTER_COUNT ((BMB_MAXIMUM_MESSAGE_SIZE - 7) / 2)

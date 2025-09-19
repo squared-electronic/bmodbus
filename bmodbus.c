@@ -269,36 +269,6 @@ static void bmodbus_encode_client_response(modbus_client_t *bmodbus){
             bmodbus->payload.response.size = 3 + 2*temp1;
             bmodbus->payload.response.data[2] = 2*temp1;
             break;
-        case 1:
-        case 2:
-            //If failed return no response
-            if(bmodbus->payload.request.result){
-                bmodbus->payload.response.size = 0;
-                break;
-            }
-            //Store values from the request for the response
-            temp1 = (bmodbus->payload.request.size + 7) / 8; //Number of bytes from number of bits
-            //Move the payload data (bytes) to the response at the offset
-            MODBUS_MEMMOVE(bmodbus->payload.response.data+3, bmodbus->payload.request.data, temp1);
-            //FIXME above move could overflow buffer on a weird read request
-            bmodbus->payload.response.size = 3 + temp1;
-            bmodbus->payload.response.data[2] = temp1;
-            break;
-        case 15:
-            //If failed return no response
-            if(bmodbus->payload.request.result){
-                bmodbus->payload.response.size = 0;
-                break;
-            }
-            //Store values from the request for the response
-            temp1 = bmodbus->payload.request.size;
-            temp2 = bmodbus->payload.request.address;
-            bmodbus->payload.response.size = 6;
-            bmodbus->payload.response.data[2] = (temp2 & 0xFF00) >> 8;
-            bmodbus->payload.response.data[3] = temp2 & 0xFF;
-            bmodbus->payload.response.data[4] = (temp1 & 0xFF00) >> 8;
-            bmodbus->payload.response.data[5] = temp1 & 0xFF;
-            break;
     }
     if(bmodbus->payload.response.size) {
         uint16_t response_crc = 0xFFFF;
