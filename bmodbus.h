@@ -171,6 +171,8 @@ extern void bmodbus_client_send_complete(modbus_client_t * bmodbus);
  */
 extern void bmodbus_client_deinit(modbus_client_t *bmodbus);
 
+#ifndef BMODBUS_NO_MASTER
+
 /**
  * @}
  * \defgroup master_api Modbus Master API
@@ -335,6 +337,8 @@ extern modbus_uart_request_t * bmodbus_master_write_multiple_coils(modbus_master
  * @return a pointer to the request, or NULL if there's no request
  */
 extern modbus_uart_request_t * bmodbus_master_write_multiple_registers(modbus_master_t *bmodbus, uint8_t client_address, uint16_t address, uint16_t count, uint16_t *data);
+
+#endif
 
 //Utility for calculating the minimum interfame delay -- which is the time from receiving the last byte of the request to sending the first byte of the response
 //This is used to calculate the interbyte delay (if used). It should be 3.5 times the time it takes to send a byte or 1.75ms when > 19200bps
